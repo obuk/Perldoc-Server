@@ -91,7 +91,9 @@ sub function_pod {
     
   # This probably needs refactoring to use Pod::POM
   open PERLFUNC,'<',\$perlfunc;
+  my $binmode;
   while (<PERLFUNC>) {
+    $binmode ||= /^=encoding\s+(\S+)/ && binmode(PERLFUNC, ":encoding($1)");
     last if /^=head2 Alphabetical Listing of Perl Functions/;
   }
   my (@headers,$body,$inlist);

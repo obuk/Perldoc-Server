@@ -5,13 +5,14 @@ use warnings;
 use parent 'Catalyst::View';
 
 use Perl::Tidy;
-
+use Encode;
 
 sub process {
   my ($self,$c) = @_;
   
   my ($result,$error);
   my $code = $c->stash->{pod};
+  $code = decode($1, $code) if $code =~ /^=encoding\s+(\S+)/m;
   perltidy(
     source      => \$code,
     destination => \$result,

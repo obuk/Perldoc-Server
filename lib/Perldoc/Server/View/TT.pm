@@ -4,7 +4,7 @@ use strict;
 use parent 'Catalyst::View::TT';
 use MRO::Compat;
 
-__PACKAGE__->config(TEMPLATE_EXTENSION => '.tt');
+__PACKAGE__->config(TEMPLATE_EXTENSION => '.tt', ENCODING => 'utf-8');
 
 sub process {
   my ($self, $c) = @_;

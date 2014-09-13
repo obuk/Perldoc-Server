@@ -25,7 +25,7 @@ sub find_modules {
 
 sub name2path {
   my $self        = shift;
-  my @search_path = grep {/\w/} @{$self->{c}->config->{search_path}};
+  my @search_path = $self->{c}->model('Pod')->search_path();
   
   state $monitor;
   unless ($monitor) {
