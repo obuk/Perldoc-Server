@@ -32,11 +32,30 @@ sub search_path {
   my @search_path = ();
   if (my $lang = $self->{c}->config->{lang}) {
     if (my $tr = $self->new_translator($lang)) {
-      push @search_path, $tr->pod_dirs();
+      if ($tr->can('pod_dirs')) {
+        push @search_path, $tr->pod_dirs();
+      } else {
+        (my $dir = $INC{"POD2/\U$lang\E.pm"}) =~ s/\.pm\z//;
+        warn "*** can't $tr->pod_dirs(); adds $dir\n";
+        push @search_path, $dir;
+      }
     }
   }
   push @search_path, @{$self->{c}->config->{search_path}};
   grep {/\w/} @search_path;
+}
+
+sub search_perlfunc_re {
+  my ($self) = @_;
+  my @search_path = ();
+  if (my $lang = $self->{c}->config->{lang}) {
+    if (my $tr = $self->new_translator($lang)) {
+      if ($tr->can('search_perlfunc_re')) {
+        return $tr->search_perlfunc_re();
+      }
+    }
+  }
+  undef;
 }
 
 sub version {
@@ -51,15 +70,14 @@ sub new_translator { # $tr = $self->new_translator($lang);
   my $self = shift;
   my $lang = shift;
 
-  eval { require POD2::Plus };
-  if (!$@) {
-    return POD2::Plus->new({ lang => $lang });
-  }
   my $pack = 'POD2::' . uc($lang);
   eval "require $pack";
-  if ( !$@ && $pack->can('new') ) {
-    return $pack->new();
+  unless ($@) {
+    return $pack->can('new')? $pack->new() : $pack;
   }
+
+  eval { require POD2::Plus };
+  return POD2::Plus->new({ lang => $lang }) unless $@;
 
   eval { require POD2::Base };
   return if $@;
