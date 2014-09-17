@@ -25,6 +25,8 @@ requires 'File::Monitor';
 requires 'HTML::Entities';
 requires 'MRO::Compat';
 
+requires  'experimental';
+
 catalyst_par_core;
 catalyst_par_engine 'HTTP';
 catalyst_par_script 'perldoc_server_bin.pl';

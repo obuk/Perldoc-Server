@@ -3,6 +3,7 @@ package Perldoc::Server::Model::Pod;
 use strict;
 use warnings;
 use 5.010;
+use experimental qw(smartmatch);
 use parent 'Catalyst::Model';
 
 use File::Slurp qw/slurp/;
