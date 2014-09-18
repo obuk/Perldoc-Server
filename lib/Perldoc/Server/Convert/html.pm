@@ -427,7 +427,8 @@ sub escape {
   #$text =~ s/([^a-z0-9])/sprintf("%%%2.2x",ord $1)/ieg;
   $text =~ s/\n/ /g;
   $text =~ tr/ /-/;
-  $text =~ s/([^\w()'*~!.-])/sprintf '%%%02x', ord $1/eg;
+  #$text =~ s/([^\w()'*~!.-])/sprintf '%%%02x', ord $1/eg;
+  $text = encode_entities($text);
   return $text;
 }
 
