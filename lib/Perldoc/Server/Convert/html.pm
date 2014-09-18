@@ -188,7 +188,7 @@ sub view_item {
         $end_tag   = "</dd>";
       }
     }
-    if (length $title) {
+    if (length $title && ref $item->title) {
       my $anchor = escape($item->title->present('Pod::POM::View::Text'));
       $title = qq{<a name="$anchor"></a><b>$title</b>};
     }
