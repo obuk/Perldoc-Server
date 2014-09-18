@@ -199,6 +199,18 @@ sub view_item {
 
 #--------------------------------------------------------------------------
 
+sub view_textblock {
+  my ($self, $text) = @_;
+  if ($c->config->{lang} =~ /^ja/i) {
+    my $x4 = qr/&#x[\da-fA-F]{4};/;
+    $text =~ s/($x4)\s*\n($x4)/$1$2/g;
+  }
+  return $Pod::POM::View::HTML::HTML_PROTECT? "$text\n" : "<p>$text</p>\n";
+}
+
+
+#--------------------------------------------------------------------------
+
 sub view_verbatim {
   my ($self,$text) = @_;
   $text = encode_entities($text);
