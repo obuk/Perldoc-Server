@@ -46,7 +46,8 @@ __PACKAGE__->config( name             => 'Perldoc::Server',
                      'View::TT'       => { INCLUDE_PATH => __PACKAGE__->path_to('root','templates')},
                      'View::Pod2HTML' => { INCLUDE_PATH => __PACKAGE__->path_to('root','templates')},
 		     encoding         => 'utf-8',
-		     lang             => $ENV{PERLDOC_SERVER_LANG} || 'en-gb',
+                     lang             => 'en-gb',
+                     site             => '/',
                     );
 
 # Set default view to TT
