@@ -500,7 +500,7 @@ sub perltidy {
   my $raw_result; my $show_perltidy = 0;
   $raw_result = encode_entities($result) if $show_perltidy;
 
-  my $site = $c->config->{site};
+  (my $site = $c->req->base) =~ s!/ajax/perlsyntax!!; # XXXXX
   $result =~ s!\$!&#36;!g;
   $result =~ s!\n*</?pre.*?>\n*!!g;
   $result =~ s!<span class="k">(.*?)</span>!($c->model('PerlFunc')->exists($1))?q(<a class="l_k" href=").qq(${site}functions/$1">$1</a>):$1!sge;
