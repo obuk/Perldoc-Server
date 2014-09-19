@@ -1,5 +1,6 @@
 <div id="breadCrumbs">
-  <a href="/">Home</a>
+  <!-- a href="/">Home</a -->
+  <a href="[% c.uri_for('/') %]">Home</a>
   [% IF breadcrumbs %]
     &gt;
     [% FOREACH crumb IN breadcrumbs %]
