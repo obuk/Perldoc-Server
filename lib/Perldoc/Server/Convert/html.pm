@@ -484,7 +484,7 @@ sub perltidy {
       # is defined in %Perl::Tidy::short_to_long_names.
       if ($result =~ s!^<span class="q">(.*)</span>$!$1! ||
 	  $result !~ /<span\b/) {
-	  $result =~ s!\w+!<span class="w">$&</span>!g;
+	  $result =~ s![*$@%]?\w+!<span class="w">$&</span>!g;
       }
       push(@result, $result);
     }
