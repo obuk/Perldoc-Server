@@ -448,15 +448,12 @@ sub escape {
 #--------------------------------------------------------------------------
 
 use Perl::Tidy qw();
+use File::Spec;
 
-# perltidy parses and beautifies perl source that is the verbatim
-# paragraphs.  and it also works inline_code in the ordinary
-# textblock.
+# perltidy runs for source code pages and verbatim paragraphs.
 
 sub perltidy {
-  local $c             = shift;
-  local $document_name = shift;
-  my    $code          = shift;
+  my ($c, $document_name, $code) = @_;
 
   my ($result, $error);
   Perl::Tidy::perltidy(
@@ -481,11 +478,10 @@ sub perltidy {
       );
 
       $result =~ s!\n*</?pre>\n*!!g;
-      $result =~ s!\n*</?pre>\n*!!g;
 
-      # the tidy style "q" (quote) is same as error, so remove it
-      # and adds style "w" (bareword) for \w+ to make link. tidy
-      # style is defined in %Perl::Tidy::short_to_long_names.
+      # the tidy style "q" (quote) is same as an error, so remove it
+      # and adds style "w" (bareword) for \w+ to make link. tidy style
+      # is defined in %Perl::Tidy::short_to_long_names.
       if ($result =~ s!^<span class="q">(.*)</span>$!$1! ||
 	  $result !~ /<span\b/) {
 	  $result =~ s!\w+!<span class="w">$&</span>!g;
@@ -493,6 +489,9 @@ sub perltidy {
       push(@result, $result);
     }
     $result = join("\n", "<pre>", @result, "</pre>");
+  } else {
+    # blank becomes doubled? in_continued_quote.
+    $result =~ s!^(\s+)(<span class="q">\1)!$2!gm;
   }
 
   # set $show_perltidy = 1 to show the result of perltidy after the
