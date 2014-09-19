@@ -10,3 +10,17 @@
     [% END %]
   </ul>
 </p>
+<!--
+[% USE Dumper %]
+<h2>Config:</h2>
+<p>
+  <ul>
+    <li> lang: [% c.config.lang %] </li>
+    <li> content_type: [% c.response.headers.content_type.join('; ') %] </li>
+    <li> document_root: [% c.uri_for('/') %] </li>
+    [% FOREACH x IN c.config %]
+      <li> <pre style="font-size: 10pt;">[% Dumper.dump(x) %]</pre>
+    [% END %]
+  </ul>
+</p>
+-->
