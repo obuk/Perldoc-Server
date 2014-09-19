@@ -85,7 +85,6 @@ root/static/js/perldoc.js
 root/static/js/PerlSyntax.js
 root/templates/breadcrumb.tt
 root/templates/default.tt
-root/templates/default.tt.orig
 root/templates/function.tt
 root/templates/function_bycat.tt
 root/templates/function_index.tt

@@ -188,12 +188,24 @@ sub view_item {
         $end_tag   = "</dd>";
       }
     }
-    if (length $title) {
+    if (length $title && ref $item->title) {
       my $anchor = escape($item->title->present('Pod::POM::View::Text'));
       $title = qq{<a name="$anchor"></a><b>$title</b>};
     }
   }
   return $start_tag."$title\n".$item->content->present($self).$end_tag."\n";
+}
+
+
+#--------------------------------------------------------------------------
+
+sub view_textblock {
+  my ($self, $text) = @_;
+  if ($c->config->{lang} =~ /^ja/i) {
+    my $x4 = qr/&#x[\da-fA-F]{4};/;
+    $text =~ s/($x4)\s*\n($x4)/$1$2/g;
+  }
+  return $Pod::POM::View::HTML::HTML_PROTECT? "$text\n" : "<p>$text</p>\n";
 }
 
 
@@ -427,12 +439,88 @@ sub escape {
   #$text =~ s/([^a-z0-9])/sprintf("%%%2.2x",ord $1)/ieg;
   $text =~ s/\n/ /g;
   $text =~ tr/ /-/;
-  $text =~ s/([^\w()'*~!.-])/sprintf '%%%02x', ord $1/eg;
+  #$text =~ s/([^\w()'*~!.-])/sprintf '%%%02x', ord $1/eg;
+  $text = encode_entities($text);
   return $text;
 }
 
 
 #--------------------------------------------------------------------------
 
+use Perl::Tidy qw();
+
+# perltidy parses and beautifies perl source that is the verbatim
+# paragraphs.  and it also works inline_code in the ordinary
+# textblock.
+
+sub perltidy {
+  local $c             = shift;
+  local $document_name = shift;
+  my    $code          = shift;
+
+  my ($result, $error);
+  Perl::Tidy::perltidy(
+    source      => \$code,
+    destination => \$result,
+    argv        => ['-html','-pre'],
+    errorfile   => \$error,
+    stderr      => File::Spec->devnull(),
+  );
+
+  # run perltidy for each line to reduce the damage if error.
+  if ($error) {
+    my @result;
+    for (split("\n", $code)) {
+      ($result, $error) = ();
+      Perl::Tidy::perltidy(
+        source      => \$_,
+        destination => \$result,
+        argv        => ['-html','-pre'],
+        errorfile   => \$error,
+        stderr      => File::Spec->devnull(),
+      );
+
+      $result =~ s!\n*</?pre>\n*!!g;
+      $result =~ s!\n*</?pre>\n*!!g;
+
+      # the tidy style "q" (quote) is same as error, so remove it
+      # and adds style "w" (bareword) for \w+ to make link. tidy
+      # style is defined in %Perl::Tidy::short_to_long_names.
+      if ($result =~ s!^<span class="q">(.*)</span>$!$1! ||
+	  $result !~ /<span\b/) {
+	  $result =~ s!\w+!<span class="w">$&</span>!g;
+      }
+      push(@result, $result);
+    }
+    $result = join("\n", "<pre>", @result, "</pre>");
+  }
+
+  # set $show_perltidy = 1 to show the result of perltidy after the
+  # verbatim paragraph.
+  my $raw_result; my $show_perltidy = 0;
+  $raw_result = encode_entities($result) if $show_perltidy;
+
+  (my $site = $c->req->base) =~ s!/ajax/perlsyntax!!; # XXXXX
+  $result =~ s!\$!&#36;!g;
+  $result =~ s!\n*</?pre.*?>\n*!!g;
+  $result =~ s!<span class="k">(.*?)</span>!($c->model('PerlFunc')->exists($1))?q(<a class="l_k" href=").qq(${site}functions/$1">$1</a>):$1!sge;
+  $result =~ s!<span class="w">(.*?)</span>!($c->model('Pod')->find($1))?'<a class="l_w" href="'."${site}view/".linkpath($1).qq(">$1</a>):$1!sge;
+
+  my $output = '<ol>';
+  my @lines = split(/\r\n|\n/,$result);
+  foreach (@lines) {$output .= "<li>$_</li>"}
+  $output .= '</ol>';
+  $output .= "<pre>$raw_result</pre>" if $show_perltidy;
+
+  $output;
+}
+
+sub linkpath {
+  my $path = shift;
+  $path =~ s!::!/!g;
+  return $path;
+}
+
+#--------------------------------------------------------------------------
 
 1;

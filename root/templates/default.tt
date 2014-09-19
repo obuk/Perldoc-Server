@@ -3,12 +3,15 @@
 <html>
     <head>
         <title>[% title | html %]</title>
-        <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-        <meta http-equiv="Content-Language" content="en-gb">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta http-equiv="Content-Language" content="[% c.config.lang or 'en-gb' %]">
         <link href="/static/css/css-20100402.css" rel="stylesheet" rev="stylesheet" type="text/css" media="screen">
         <link href="/static/css/exploreperl.css" rel="stylesheet" rev="stylesheet" type="text/css">
         <script src="/static/js/OpenThought.js"></script>
         <script src="/static/js/PerlSyntax.js"></script>
+        <script language="JavaScript" type="text/javascript">
+          PerlSyntax.highlightUrl = '[% c.uri_for("/ajax/perlsyntax/") %]';
+        </script>
     </head>
 
     <body onLoad="perldoc.startup();PerlSyntax.highlight();" onPageShow="if (event.persisted) perldoc.startup();PerlSyntax.highlight();">
@@ -16,7 +19,8 @@
           
           <div id="header">
             <div id="homepage_link">
-              <a href="/"></a>
+              <!-- a href="/"></a -->
+              <a href="[% c.uri_for('/') %]"></a>
             </div>
             <div id="strapline">
               Local Perl Documentation

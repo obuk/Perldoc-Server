@@ -1,5 +1,8 @@
 <div class="title_container">
   <h1>[% title %]</h1>
+  [% IF version %]
+    <p style="margin: 0ex 1em;">[% version %]</p>
+  [% END %]
 </div>
 
 [% pod2html %]

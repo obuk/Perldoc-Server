@@ -88,11 +88,17 @@ sub function_pod {
   
   my $self     = shift;
   my $perlfunc = $self->{c}->model('Pod')->pod('perlfunc');
-    
+  my $re       = $self->{c}->model('Pod')->search_perlfunc_re(),
+  my $re_default = 'Alphabetical Listing of Perl Functions';
+  $re = "($re|$re_default)" if $re && $re ne $re_default;
+  $re ||= $re_default;
+
   # This probably needs refactoring to use Pod::POM
   open PERLFUNC,'<',\$perlfunc;
+  my $binmode;
   while (<PERLFUNC>) {
-    last if /^=head2 Alphabetical Listing of Perl Functions/;
+    $binmode ||= /^=encoding\s+(\S+)/ && binmode(PERLFUNC, ":encoding($1)");
+    last if /^=head2 $re/;
   }
   my (@headers,$body,$inlist);
   my $state = 'header_search';

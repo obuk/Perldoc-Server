@@ -3,6 +3,7 @@ package Perldoc::Server::Controller::View;
 use strict;
 use warnings;
 use 5.010;
+use experimental qw(smartmatch);
 use parent 'Catalyst::Controller';
 
 =head1 NAME
@@ -30,6 +31,10 @@ sub index :Path {
     $c->stash->{path}        = \@pod;
     $c->stash->{pod}         = $c->model('Pod')->pod($page);
     $c->stash->{contentpage} = 1;
+
+    if (my $v = $c->model('Pod')->version($page)) {
+      $c->stash->{version} = version->parse($v)->stringify;
+    }
     
     # Count the page views in the user's session
     my $uri = join '/','/view',@pod;

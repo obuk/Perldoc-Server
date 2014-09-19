@@ -5,7 +5,7 @@ use base 'Catalyst::View::TT';
 use NEXT;
 use OpenThought;
 
-__PACKAGE__->config(TEMPLATE_EXTENSION => '.tt');
+__PACKAGE__->config(TEMPLATE_EXTENSION => '.tt', ENCODING => 'utf-8');
 
 
 sub process {

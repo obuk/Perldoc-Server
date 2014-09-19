@@ -7,7 +7,10 @@ use parent 'Catalyst::Controller';
 use File::Spec;
 use HTML::Entities;
 use OpenThought;
-use Perl::Tidy;
+
+use HTML::Entities;
+use CGI::Util qw(unescape);
+use Encode;
 
 =head1 NAME
 
@@ -28,40 +31,14 @@ Catalyst Controller.
 
 sub index :Path :Args(0) {
   my ( $self, $c ) = @_;
-
   my $id   = $c->req->param('id');
   my $code = $c->req->param($id);
-  
   $code = decode_entities($code);
-
-  my ($result,$error);
-  perltidy(
-    source      => \$code,
-    destination => \$result,
-    argv        => ['-html','-pre'],
-    errorfile   => \$error,
-    stderr      => File::Spec->devnull(),
-  );
-  
-  $result =~ s!\$!&#36;!g;
-  $result =~ s!\n*</?pre.*?>\n*!!g;
-  $result =~ s!<span class="k">(.*?)</span>!($c->model('PerlFunc')->exists($1))?q(<a class="l_k" href=").qq(/functions/$1">$1</a>):$1!sge;
-  $result =~ s!<span class="w">(.*?)</span>!($c->model('Pod')->find($1))?'<a class="l_w" href="/view/'.linkpath($1).qq(">$1</a>):$1!sge;
-
-  my $output = '<ol>';
-  my @lines = split(/\r\n|\n/,$result);
-  foreach (@lines) {$output .= "<li>$_</li>"}
-  $output .= '</ol>';
-
+  $code =~ s/%u[\da-fA-F]{4,}/decode('utf8', unescape($&))/ge;
+  my $output = Perldoc::Server::Convert::html::perltidy(
+      $c, $c->stash->{title}, $code);
   push @{$c->stash->{openthought}}, {$id => $output};
   $c->detach('View::OpenThoughtTT');
-}
-
-
-sub linkpath {
-  my $path = shift;
-  $path =~ s!::!/!g;
-  return $path;
 }
 
 =head1 AUTHOR

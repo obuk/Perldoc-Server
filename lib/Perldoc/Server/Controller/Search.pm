@@ -3,6 +3,7 @@ package Perldoc::Server::Controller::Search;
 use strict;
 use warnings;
 use 5.010;
+use experimental qw(smartmatch);
 use parent 'Catalyst::Controller';
 
 =head1 NAME
