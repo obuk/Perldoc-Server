@@ -93,8 +93,8 @@ our @section_data = (
     pages     => [qw/perlhist perltodo perldelta/],
     pagematch => qr/^perl\d+delta$/,
     sort      => sub {
-                   (my $c = $a) =~ s/.*?(\d)(\d+).*/$1.$2/;
-                   (my $d = $b) =~ s/.*?(\d)(\d+).*/$1.$2/;
+                   (my $c = $a) =~ s/.*?(5[1-5]?)(\d+).*/$1.$2/;
+                   (my $d = $b) =~ s/.*?(5[1-5]?)(\d+).*/$1.$2/;
                    $d <=> $c
                  }
   },
