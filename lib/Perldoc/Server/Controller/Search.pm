@@ -1,3 +1,5 @@
+# -*- perl-indent-level: 2; indent-tabs-mode: nil -*-
+
 package Perldoc::Server::Controller::Search;
 
 use strict;
@@ -44,6 +46,9 @@ sub index :Path :Args(0) {
       when (/^($query.*)$/i ~~ @pages) {
         my $matched_page = $1;
         return $c->response->redirect( $c->uri_for('/view',split('::',$matched_page)) );
+      }
+      when (/\([^\)]+\)$/) {
+	return $c->response->redirect( $c->uri_for('/view', $query) );
       }
     }
     
