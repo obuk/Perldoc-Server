@@ -126,6 +126,8 @@ div#search_form {
 div#search_form input {
 	border-style: none;
 	width: 115px;
+	// background-color: #deb;
+	font-size: 12px;
 }
 
 /* @end */
@@ -450,7 +452,7 @@ div#source_link {
 	color: #7f7f7f;
 
 	font: .8em "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
-	padding-top: 53px;
+	margin-top: 53px;
 }
 
 div#breadcrumbs a {
