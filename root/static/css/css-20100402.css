@@ -126,6 +126,9 @@ div#search_form {
 div#search_form input {
 	border-style: none;
 	width: 115px;
+	background-color: transparent;
+	// background-color: #c88;
+	font-size: 12px;
 }
 
 /* @end */
@@ -169,8 +172,8 @@ div#footer {
 
 div#footer_content {
 	background-image: url(/static/images/footer_bg.png);
-	padding-right: 74px;
-	padding-left: 74px;
+	padding-right: 52px;
+	padding-left:52px;
 }
 
 div#footer_strapline {
@@ -450,7 +453,7 @@ div#source_link {
 	color: #7f7f7f;
 
 	font: .8em "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
-	padding-top: 53px;
+	margin-top: 53px;
 }
 
 div#breadcrumbs a {

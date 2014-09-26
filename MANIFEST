@@ -23,11 +23,14 @@ lib/Perldoc/Server/Controller/Search.pm
 lib/Perldoc/Server/Controller/Source.pm
 lib/Perldoc/Server/Controller/View.pm
 lib/Perldoc/Server/Convert/html.pm
+lib/Perldoc/Server/Convert/Man2HTML.pm
+lib/Perldoc/Server/Convert/Verbatim.pm
 lib/Perldoc/Server/Model/Index.pm
 lib/Perldoc/Server/Model/PerlFunc.pm
 lib/Perldoc/Server/Model/Pod.pm
 lib/Perldoc/Server/Model/Section.pm
 lib/Perldoc/Server/View/Function.pm
+lib/Perldoc/Server/View/Man2HTML.pm
 lib/Perldoc/Server/View/OpenThoughtTT.pm
 lib/Perldoc/Server/View/Pod2HTML.pm
 lib/Perldoc/Server/View/Pod2Source.pm
@@ -95,6 +98,7 @@ root/templates/pod2source.tt
 root/templates/search_results.tt
 root/templates/section_index.tt
 script/perldoc-server
+script/perldoc_server.psgi
 script/perldoc_server_bin.pl
 script/perldoc_server_cgi.pl
 script/perldoc_server_create.pl
