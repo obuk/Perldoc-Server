@@ -47,7 +47,7 @@ sub index :Path :Args(0) {
         my $matched_page = $1;
         return $c->response->redirect( $c->uri_for('/view',split('::',$matched_page)) );
       }
-      when (/\([^\)]+\)$/) {
+      when (/(\.(pod|pm|pl)|\([^\)]+\))$/) {
 	return $c->response->redirect( $c->uri_for('/view', $query) );
       }
     }
