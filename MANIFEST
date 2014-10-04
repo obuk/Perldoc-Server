@@ -116,6 +116,8 @@ t/controller_Index.t
 t/controller_Search.t
 t/controller_Source.t
 t/controller_View.t
+t/convert_html_anchor.t
+t/convert_html_ja.t
 t/model_Index.t
 t/model_PerlFunc.t
 t/model_Pod.t
