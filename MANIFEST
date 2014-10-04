@@ -118,11 +118,14 @@ t/controller_Source.t
 t/controller_View.t
 t/convert_html_anchor.t
 t/convert_html_ja.t
+t/convert_Man2HTML.t
+t/convert_Verbatim.t
 t/model_Index.t
 t/model_PerlFunc.t
 t/model_Pod.t
 t/model_Section.t
 t/view_Function.t
+t/view_Man2HTML.t
 t/view_OpenThoughtTT.t
 t/view_Pod2HTML.t
 t/view_Pod2Source.t

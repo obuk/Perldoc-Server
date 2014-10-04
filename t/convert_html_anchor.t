@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Test::More;
+use Test::More tests => 5;
 
 BEGIN { use_ok 'Perldoc::Server::Convert::html' };
 
@@ -62,5 +62,3 @@ sub exists {
   diag("${module}::exists $page");
   undef;
 }
-
-done_testing();

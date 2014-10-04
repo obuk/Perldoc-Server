@@ -2,12 +2,15 @@
 
 use strict;
 use warnings;
-use utf8;
+
 binmode STDOUT, ":encoding(utf-8)";
 binmode STDERR, ":encoding(utf-8)";
-use Test::More;
+
+use Test::More tests => 2;
 
 BEGIN { use_ok 'Perldoc::Server::Convert::html' };
+
+use utf8;
 
 my $pod = <<EOT;
 =encode utf8;
@@ -53,5 +56,3 @@ sub exists {
   diag("${module}::exists $page");
   undef;
 }
-
-done_testing();
