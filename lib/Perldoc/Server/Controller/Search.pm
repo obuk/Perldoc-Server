@@ -1,3 +1,5 @@
+# -*- perl-indent-level: 2; indent-tabs-mode: nil -*-
+
 package Perldoc::Server::Controller::Search;
 
 use strict;

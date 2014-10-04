@@ -126,7 +126,7 @@ div#search_form {
 div#search_form input {
 	border-style: none;
 	width: 115px;
-	// background-color: #deb;
+	background-color: transparent;
 	font-size: 12px;
 }
 
@@ -171,8 +171,8 @@ div#footer {
 
 div#footer_content {
 	background-image: url(/static/images/footer_bg.png);
-	padding-right: 74px;
-	padding-left: 74px;
+	padding-right: 52px;
+	padding-left: 52px;
 }
 
 div#footer_strapline {

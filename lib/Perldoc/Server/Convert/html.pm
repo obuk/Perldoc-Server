@@ -1,3 +1,5 @@
+# -*- perl-indent-level: 2; indent-tabs-mode: nil -*-
+
 package Perldoc::Server::Convert::html;
 
 use strict;
@@ -16,6 +18,28 @@ use Data::Dumper;
 our @ISA = qw/Pod::POM::View::HTML/;
 our ($c,$document_name);
 our @OVER;
+our @ANCHOR;
+
+our $JA = qr/[
+\x{4E00}-\x{9FFF}               # CJK Unified Ideographs
+\x{3400}-\x{4DBF}               # CJK Unified Ideographs Extension A
+\x{20000}-\x{2A6DF}             # CJK Unified Ideographs Extension B
+\x{2A700}-\x{2B73F}             # CJK Unified Ideographs Extension C
+\x{2A700}-\x{2B73F}             # CJK Unified Ideographs Extension D
+\x{F900}-\x{FAFF}               # CJK Compatibility Ideographs
+\x{2F800}-\x{2FA1D}             # CJK Compatibility Ideographs Supplement
+\x{E0100}-\x{E01EF}             # Variation Selectors Supplement
+\x{2F00}-\x{2FDF}               # CJK Radicals
+\x{2E80}-\x{2EFF}               # CJK Radicals Supplement
+\x{31C0}-\x{31EF}               # CJK Strokes
+\x{2FF0}-\x{2FFF}               # Ideographic Description Characters
+\x{3040}-\x{309F}               # Hiragana
+\x{30A0}-\x{30FF}               # Katakana
+\x{31F0}-\x{31FF}               # Katakana Phonetic Extensions
+\x{1B000}-\x{1B0FF}             # Kana Supplement
+\x{FF00}-\x{FFEF}               # Halfwidth and Fullwidth Forms
+\x{3190}-\x{319F}               # Kanbun
+]/x;
 
 
 #--------------------------------------------------------------------------
@@ -52,19 +76,20 @@ sub index {
 sub build_index {
   my $pod   = shift;
   my $index = '';
+  local @ANCHOR = ();
   if ($pod->head1->[0]) {
     $index .= '<ul>';
     foreach my $head1 ($pod->head1) {
-      my $title  = $head1->title->present(__PACKAGE__);
+      (my $title = $head1->title->present(__PACKAGE__)) =~ s/\s+$//;
       my $anchor = escape($head1->title->present('Pod::POM::View::Text'));
       $index   .= qq{<li><a href="#$anchor">$title</a>};
       if ($head1->head2->[0]) {
         $index .= '<ul>';
-          foreach my $head2 ($head1->head2) {
-            $title  = $head2->title->present(__PACKAGE__);
-            $anchor = escape($head2->title->present('Pod::POM::View::Text'));
-            $index .= qq{<li><a href="#$anchor">$title</a>};
-          }
+        foreach my $head2 ($head1->head2) {
+          (my $title = $head2->title->present(__PACKAGE__)) =~ s/\s+$//;
+          my $anchor = escape($head2->title->present('Pod::POM::View::Text'));
+          $index .= qq{<li><a href="#$anchor">$title</a>};
+        }
         $index .= '</ul>';
       }
     }
@@ -118,10 +143,11 @@ sub view_begin {
 
 sub view_head1 {
   my ($self,$head1) = @_;
-  my $title = $head1->title->present($self);
-  my $anchor = escape($head1->title->present('Pod::POM::View::Text'));
-  return qq{<a name="$anchor"></a><h1>$title</h1>\n}.
-         $head1->content->present($self);
+  local @ANCHOR = ();
+  (my $title = $head1->title->present($self)) =~ s/\s+$//;
+  my $anchor = $head1->title->present('Pod::POM::View::Text');
+  my @anchor = map { '<a name="'.escape($_).'"></a>' } @ANCHOR, $anchor;
+  return join('', @anchor, "<h1>$title</h1>", $head1->content->present($self));
 }
 
 
@@ -129,10 +155,11 @@ sub view_head1 {
 
 sub view_head2 {
   my ($self,$head2) = @_;
-  my $title = $head2->title->present($self);
-  my $anchor = escape($head2->title->present('Pod::POM::View::Text'));
-  return qq{<a name="$anchor"></a><h2>$title</h2>\n}.
-         $head2->content->present($self);
+  local @ANCHOR = ();
+  (my $title = $head2->title->present($self)) =~ s/\s+$//;
+  my $anchor = $head2->title->present('Pod::POM::View::Text');
+  my @anchor = map { '<a name="'.escape($_).'"></a>' } @ANCHOR, $anchor;
+  return join('', @anchor, "<h2>$title</h2>", $head2->content->present($self));
 }
 
 
@@ -179,6 +206,7 @@ sub view_item {
   my $start_tag = '<li>';
   my $end_tag   = '</li>';
   if (defined $title) {
+    local @ANCHOR = ();
     $title = $title->present($self) if ref $title;
     $title =~ s/($strip)// if $strip;
     if (defined $1) {
@@ -188,9 +216,12 @@ sub view_item {
         $end_tag   = "</dd>";
       }
     }
+    $title =~ s/\s+$//;
     if (length $title && ref $item->title) {
-      my $anchor = escape($item->title->present('Pod::POM::View::Text'));
-      $title = qq{<a name="$anchor"></a><b>$title</b>};
+      my $anchor = $item->title->present('Pod::POM::View::Text');
+      my @anchor = map { '<a name="'.escape($_).'"></a>' } @ANCHOR, $anchor;
+      $start_tag = join('', '<dt>', @anchor, $title, '<dd>'); $title = '';
+      $end_tag   = "</dd>";
     }
   }
   return $start_tag."$title\n".$item->content->present($self).$end_tag."\n";
@@ -202,8 +233,7 @@ sub view_item {
 sub view_textblock {
   my ($self, $text) = @_;
   if ($c->config->{lang} =~ /^ja/i) {
-    my $x4 = qr/&#x[\da-fA-F]{4};/;
-    $text =~ s/($x4)\s*\n($x4)/$1$2/g;
+    $text =~ s/($JA)\s*\n($JA)/$1$2/g;
   }
   return $Pod::POM::View::HTML::HTML_PROTECT? "$text\n" : "<p>$text</p>\n";
 }
@@ -292,7 +322,9 @@ sub view_seq_link {
     }
     return Pod::POM::View::HTML::make_href($href, $inferred);
   } elsif ($type eq 'man') {
-    return qq{<i>$inferred</i>};
+    #return qq{<i>$inferred</i>};
+    my $href = $c->uri_for("/view/$inferred");
+    return qq{<a href="$href">$inferred</a>};
   } elsif ($type eq 'url') {
     return qq{<a href="$page">$inferred</a>};
   }
@@ -372,7 +404,8 @@ sub view_seq_entity {
 
 sub view_seq_index {
   my ($self, $entity) = @_;
-  return '';  
+  push(@ANCHOR, $entity);
+  return '';
 }
 
 
@@ -384,52 +417,14 @@ sub view_seq_space {
     return $text;
 }
 
-my $urls = '(' . join ('|',
-     qw{
-       http
-       telnet
-       mailto
-       news
-       gopher
-       file
-       wais
-       ftp
-     } ) . ')';	
-my $ltrs = '\w';
-my $gunk = '/#~:.?+=&%@!\-';
-my $punc = '.:!?\-;';
-my $any  = "${ltrs}${gunk}${punc}";
 
-sub view_seq_text {
-     my ($self, $text) = @_;
+#--------------------------------------------------------------------------
 
-     unless ($Pod::POM::View::HTML::HTML_PROTECT) {
-        $text = encode_entities($text);
-     }
-
-     $text =~ s{
-        \b                           # start at word boundary
-         (                           # begin $1  {
-           $urls     :               # need resource and a colon
-	  (?!:)                     # Ignore File::, among others.
-           [$any] +?                 # followed by one or more of any valid
-                                     #   character, but be conservative and
-                                     #   take only what you need to....
-         )                           # end   $1  }
-         (?=                         # look-ahead non-consumptive assertion
-                 [$punc]*            # either 0 or more punctuation followed
-                 (?:                 #   followed
-                     [^$any]         #   by a non-url char
-                     |               #   or
-                     $               #   end of the string
-                 )                   #
-             |                       # or else
-                 $                   #   then end of the string
-         )
-       }{<a href="$1">$1</a>}igox;
-
-     return $text;
+sub encode {
+  my ($self, $text) = @_;
+  return $text;
 }
+
 
 #--------------------------------------------------------------------------
 
@@ -444,81 +439,6 @@ sub escape {
   return $text;
 }
 
-
-#--------------------------------------------------------------------------
-
-use Perl::Tidy qw();
-use File::Spec;
-
-# perltidy runs for source code pages and verbatim paragraphs.
-
-sub perltidy {
-  my ($c, $document_name, $code) = @_;
-
-  my ($result, $error);
-  Perl::Tidy::perltidy(
-    source      => \$code,
-    destination => \$result,
-    argv        => ['-html','-pre'],
-    errorfile   => \$error,
-    stderr      => File::Spec->devnull(),
-  );
-
-  # run perltidy for each line to reduce the damage if error.
-  if ($error) {
-    my @result;
-    for (split("\n", $code)) {
-      ($result, $error) = ();
-      Perl::Tidy::perltidy(
-        source      => \$_,
-        destination => \$result,
-        argv        => ['-html','-pre'],
-        errorfile   => \$error,
-        stderr      => File::Spec->devnull(),
-      );
-
-      $result =~ s!\n*</?pre>\n*!!g;
-
-      # the tidy style "q" (quote) is same as an error, so remove it
-      # and adds style "w" (bareword) for \w+ to make link. tidy style
-      # is defined in %Perl::Tidy::short_to_long_names.
-      if ($result =~ s!^<span class="q">(.*)</span>$!$1! ||
-	  $result !~ /<span\b/) {
-	  $result =~ s![*$@%]?\w+!<span class="w">$&</span>!g;
-      }
-      push(@result, $result);
-    }
-    $result = join("\n", "<pre>", @result, "</pre>");
-  } else {
-    # blank becomes doubled? in_continued_quote.
-    $result =~ s!^(\s+)(<span class="q">\1)!$2!gm;
-  }
-
-  # set $show_perltidy = 1 to show the result of perltidy after the
-  # verbatim paragraph.
-  my $raw_result; my $show_perltidy = 0;
-  $raw_result = encode_entities($result) if $show_perltidy;
-
-  (my $site = $c->req->base) =~ s!/ajax/perlsyntax!!; # XXXXX
-  $result =~ s!\$!&#36;!g;
-  $result =~ s!\n*</?pre.*?>\n*!!g;
-  $result =~ s!<span class="k">(.*?)</span>!($c->model('PerlFunc')->exists($1))?q(<a class="l_k" href=").qq(${site}functions/$1">$1</a>):$1!sge;
-  $result =~ s!<span class="w">(.*?)</span>!($c->model('Pod')->find($1))?'<a class="l_w" href="'."${site}view/".linkpath($1).qq(">$1</a>):$1!sge;
-
-  my $output = '<ol>';
-  my @lines = split(/\r\n|\n/,$result);
-  foreach (@lines) {$output .= "<li>$_</li>"}
-  $output .= '</ol>';
-  $output .= "<pre>$raw_result</pre>" if $show_perltidy;
-
-  $output;
-}
-
-sub linkpath {
-  my $path = shift;
-  $path =~ s!::!/!g;
-  return $path;
-}
 
 #--------------------------------------------------------------------------
 

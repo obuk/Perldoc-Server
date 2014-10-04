@@ -1,3 +1,5 @@
+# -*- perl-indent-level: 2; indent-tabs-mode: nil -*-
+
 package Perldoc::Server;
 
 use strict;
@@ -24,7 +26,7 @@ use Catalyst qw/
                 Session::State::Cookie
                 Session::Store::File
                 Static::Simple/;
-our $VERSION = '0.10';
+our $VERSION = '0.10_06';
 
 # Configure the application.
 #
@@ -46,7 +48,7 @@ __PACKAGE__->config( name             => 'Perldoc::Server',
                      'View::TT'       => { INCLUDE_PATH => __PACKAGE__->path_to('root','templates')},
                      'View::Pod2HTML' => { INCLUDE_PATH => __PACKAGE__->path_to('root','templates')},
 		     encoding         => 'utf-8',
-                     lang             => 'en-gb',
+		     lang             => 'en-gb',
                     );
 
 # Set default view to TT

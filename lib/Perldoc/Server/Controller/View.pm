@@ -1,3 +1,5 @@
+# -*- perl-indent-level: 2; indent-tabs-mode: nil -*-
+
 package Perldoc::Server::Controller::View;
 
 use strict;
@@ -55,6 +57,9 @@ sub index :Path {
                 { url => $c->uri_for('/index/modules',$1), name => $1 },
             ];
             $c->stash->{source_available} = 1;
+        }
+        when (/\([^\)]+\)$/) {
+          return $c->forward('View::Man2HTML');
         }
         default {
             $c->stash->{breadcrumbs} = [

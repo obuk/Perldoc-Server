@@ -1,13 +1,12 @@
+# -*- perl-indent-level: 2; indent-tabs-mode: nil -*-
+
 package Perldoc::Server::Controller::Ajax::PerlSyntax;
 
 use strict;
 use warnings;
 use parent 'Catalyst::Controller';
 
-use File::Spec;
-use HTML::Entities;
-use OpenThought;
-
+use Perldoc::Server::Convert::Verbatim;
 use HTML::Entities;
 use CGI::Util qw(unescape);
 use Encode;
@@ -35,7 +34,7 @@ sub index :Path :Args(0) {
   my $code = $c->req->param($id);
   $code = decode_entities($code);
   $code =~ s/%u[\da-fA-F]{4,}/decode('utf8', unescape($&))/ge;
-  my $output = Perldoc::Server::Convert::html::perltidy(
+  my $output = Perldoc::Server::Convert::Verbatim::perltidy(
       $c, $c->stash->{title}, $code);
   push @{$c->stash->{openthought}}, {$id => $output};
   $c->detach('View::OpenThoughtTT');
