@@ -18,6 +18,7 @@ use Data::Dumper;
 our @ISA = qw/Pod::POM::View::HTML/;
 our ($c,$document_name);
 our @OVER;
+our @ANCHOR;
 
 
 #--------------------------------------------------------------------------
@@ -54,19 +55,20 @@ sub index {
 sub build_index {
   my $pod   = shift;
   my $index = '';
+  local @ANCHOR = ();
   if ($pod->head1->[0]) {
     $index .= '<ul>';
     foreach my $head1 ($pod->head1) {
-      my $title  = $head1->title->present(__PACKAGE__);
+      (my $title = $head1->title->present(__PACKAGE__)) =~ s/\s+$//;
       my $anchor = escape($head1->title->present('Pod::POM::View::Text'));
       $index   .= qq{<li><a href="#$anchor">$title</a>};
       if ($head1->head2->[0]) {
         $index .= '<ul>';
-          foreach my $head2 ($head1->head2) {
-            $title  = $head2->title->present(__PACKAGE__);
-            $anchor = escape($head2->title->present('Pod::POM::View::Text'));
-            $index .= qq{<li><a href="#$anchor">$title</a>};
-          }
+        foreach my $head2 ($head1->head2) {
+          (my $title = $head2->title->present(__PACKAGE__)) =~ s/\s+$//;
+          my $anchor = escape($head2->title->present('Pod::POM::View::Text'));
+          $index .= qq{<li><a href="#$anchor">$title</a>};
+        }
         $index .= '</ul>';
       }
     }
@@ -120,10 +122,11 @@ sub view_begin {
 
 sub view_head1 {
   my ($self,$head1) = @_;
-  my $title = $head1->title->present($self);
-  my $anchor = escape($head1->title->present('Pod::POM::View::Text'));
-  return qq{<a name="$anchor"></a><h1>$title</h1>\n}.
-         $head1->content->present($self);
+  local @ANCHOR = ();
+  (my $title = $head1->title->present($self)) =~ s/\s+$//;
+  my $anchor = $head1->title->present('Pod::POM::View::Text');
+  my @anchor = map { '<a name="'.escape($_).'"></a>' } @ANCHOR, $anchor;
+  return join('', @anchor, "<h1>$title</h1>", $head1->content->present($self));
 }
 
 
@@ -131,10 +134,11 @@ sub view_head1 {
 
 sub view_head2 {
   my ($self,$head2) = @_;
-  my $title = $head2->title->present($self);
-  my $anchor = escape($head2->title->present('Pod::POM::View::Text'));
-  return qq{<a name="$anchor"></a><h2>$title</h2>\n}.
-         $head2->content->present($self);
+  local @ANCHOR = ();
+  (my $title = $head2->title->present($self)) =~ s/\s+$//;
+  my $anchor = $head2->title->present('Pod::POM::View::Text');
+  my @anchor = map { '<a name="'.escape($_).'"></a>' } @ANCHOR, $anchor;
+  return join('', @anchor, "<h2>$title</h2>", $head2->content->present($self));
 }
 
 
@@ -181,6 +185,7 @@ sub view_item {
   my $start_tag = '<li>';
   my $end_tag   = '</li>';
   if (defined $title) {
+    local @ANCHOR = ();
     $title = $title->present($self) if ref $title;
     $title =~ s/($strip)// if $strip;
     if (defined $1) {
@@ -190,9 +195,12 @@ sub view_item {
         $end_tag   = "</dd>";
       }
     }
+    $title =~ s/\s+$//;
     if (length $title && ref $item->title) {
-      my $anchor = escape($item->title->present('Pod::POM::View::Text'));
-      $title = qq{<a name="$anchor"></a><b>$title</b>};
+      my $anchor = $item->title->present('Pod::POM::View::Text');
+      my @anchor = map { '<a name="'.escape($_).'"></a>' } @ANCHOR, $anchor;
+      $start_tag = join('', '<dt>', @anchor, $title, '<dd>'); $title = '';
+      $end_tag   = "</dd>";
     }
   }
   return $start_tag."$title\n".$item->content->present($self).$end_tag."\n";
@@ -203,10 +211,6 @@ sub view_item {
 
 sub view_textblock {
   my ($self, $text) = @_;
-  if ($c->config->{lang} =~ /^ja/i) {
-    my $x4 = qr/&#x[\da-fA-F]{4};/;
-    $text =~ s/($x4)\s*\n($x4)/$1$2/g;
-  }
   return $Pod::POM::View::HTML::HTML_PROTECT? "$text\n" : "<p>$text</p>\n";
 }
 
@@ -376,7 +380,8 @@ sub view_seq_entity {
 
 sub view_seq_index {
   my ($self, $entity) = @_;
-  return '';  
+  push(@ANCHOR, $entity);
+  return '';
 }
 
 
@@ -388,52 +393,14 @@ sub view_seq_space {
     return $text;
 }
 
-my $urls = '(' . join ('|',
-     qw{
-       http
-       telnet
-       mailto
-       news
-       gopher
-       file
-       wais
-       ftp
-     } ) . ')';	
-my $ltrs = '\w';
-my $gunk = '/#~:.?+=&%@!\-';
-my $punc = '.:!?\-;';
-my $any  = "${ltrs}${gunk}${punc}";
 
-sub view_seq_text {
-     my ($self, $text) = @_;
+#--------------------------------------------------------------------------
 
-     unless ($Pod::POM::View::HTML::HTML_PROTECT) {
-        $text = encode_entities($text);
-     }
-
-     $text =~ s{
-        \b                           # start at word boundary
-         (                           # begin $1  {
-           $urls     :               # need resource and a colon
-           (?!:)                     # Ignore File::, among others.
-           [$any] +?                 # followed by one or more of any valid
-                                     #   character, but be conservative and
-                                     #   take only what you need to....
-         )                           # end   $1  }
-         (?=                         # look-ahead non-consumptive assertion
-                 [$punc]*            # either 0 or more punctuation followed
-                 (?:                 #   followed
-                     [^$any]         #   by a non-url char
-                     |               #   or
-                     $               #   end of the string
-                 )                   #
-             |                       # or else
-                 $                   #   then end of the string
-         )
-       }{<a href="$1">$1</a>}igox;
-
-     return $text;
+sub encode {
+  my ($self, $text) = @_;
+  return $text;
 }
+
 
 #--------------------------------------------------------------------------
 
