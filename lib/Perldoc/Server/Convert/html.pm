@@ -52,6 +52,7 @@ sub convert {
   my $pom    = $parser->parse_text($pod);
   my $index  = build_index($pom);
   my $body   = Perldoc::Server::Convert::html->print($pom);
+  $body =~ s!</pre><pre class="verbatim">!\n\n!g; # XXXXX
   return $index."<!--  [% TAGS [~ ~] %]  -->\n$body";
 }
 
@@ -243,7 +244,12 @@ sub view_textblock {
 
 sub view_verbatim {
   my ($self,$text) = @_;
-  $text = encode_entities($text);
+  # $text = encode_entities($text);
+  for ($text) {
+    s/&/&amp;/g;
+    s/</&lt;/g;
+    s/>/&gt;/g;
+  }
   return qq{<pre class="verbatim">$text</pre>};
 }
 
