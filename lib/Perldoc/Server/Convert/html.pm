@@ -20,27 +20,6 @@ our ($c,$document_name);
 our @OVER;
 our @ANCHOR;
 
-our $JA = qr/[
-\x{4E00}-\x{9FFF}               # CJK Unified Ideographs
-\x{3400}-\x{4DBF}               # CJK Unified Ideographs Extension A
-\x{20000}-\x{2A6DF}             # CJK Unified Ideographs Extension B
-\x{2A700}-\x{2B73F}             # CJK Unified Ideographs Extension C
-\x{2A700}-\x{2B73F}             # CJK Unified Ideographs Extension D
-\x{F900}-\x{FAFF}               # CJK Compatibility Ideographs
-\x{2F800}-\x{2FA1D}             # CJK Compatibility Ideographs Supplement
-\x{E0100}-\x{E01EF}             # Variation Selectors Supplement
-\x{2F00}-\x{2FDF}               # CJK Radicals
-\x{2E80}-\x{2EFF}               # CJK Radicals Supplement
-\x{31C0}-\x{31EF}               # CJK Strokes
-\x{2FF0}-\x{2FFF}               # Ideographic Description Characters
-\x{3040}-\x{309F}               # Hiragana
-\x{30A0}-\x{30FF}               # Katakana
-\x{31F0}-\x{31FF}               # Katakana Phonetic Extensions
-\x{1B000}-\x{1B0FF}             # Kana Supplement
-\x{FF00}-\x{FFEF}               # Halfwidth and Fullwidth Forms
-\x{3190}-\x{319F}               # Kanbun
-]/x;
-
 
 #--------------------------------------------------------------------------
 
@@ -233,8 +212,8 @@ sub view_item {
 
 sub view_textblock {
   my ($self, $text) = @_;
-  if ($c->config->{lang} =~ /^ja/i) {
-    $text =~ s/($JA)\s*\n($JA)/$1$2/g;
+  if ($c->config->{lang} && $c->config->{lang} =~ /^ja/i) {
+    $text =~ s/([^\x21-\xFF])\s*\n([^\x21-\xFF])/$1$2/g;
   }
   return $Pod::POM::View::HTML::HTML_PROTECT? "$text\n" : "<p>$text</p>\n";
 }
