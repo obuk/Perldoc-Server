@@ -30,7 +30,7 @@ our %FORMAT;
 sub convert {
   local $c             = shift;
   local $document_name = shift;
-  local %FORMAT = %{ dclone($c->config->{feature}{format}) };
+  local %FORMAT = %{ dclone($c->config->{feature}{format} || {}) };
   my $pod    = shift;
   my $parser = Pod::POM->new();
   my $pom    = $parser->parse_text($pod);
