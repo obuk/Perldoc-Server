@@ -25,8 +25,6 @@ requires 'File::Monitor';
 requires 'HTML::Entities';
 requires 'MRO::Compat';
 requires 'experimental';
-
-requires 'POD2::JA';
 requires 'Man2Html';
 
 catalyst_par_core;

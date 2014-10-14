@@ -13,33 +13,16 @@ use Pod::POM 0.23;
 use Pod::POM::View::HTML;
 use Pod::POM::View::Text;
 
+use Storable qw(dclone);
+use Getopt::Long;
+
 use Data::Dumper;
 
 our @ISA = qw/Pod::POM::View::HTML/;
 our ($c,$document_name);
 our @OVER;
 our @ANCHOR;
-
-our $JA = qr/[
-\x{4E00}-\x{9FFF}               # CJK Unified Ideographs
-\x{3400}-\x{4DBF}               # CJK Unified Ideographs Extension A
-\x{20000}-\x{2A6DF}             # CJK Unified Ideographs Extension B
-\x{2A700}-\x{2B73F}             # CJK Unified Ideographs Extension C
-\x{2A700}-\x{2B73F}             # CJK Unified Ideographs Extension D
-\x{F900}-\x{FAFF}               # CJK Compatibility Ideographs
-\x{2F800}-\x{2FA1D}             # CJK Compatibility Ideographs Supplement
-\x{E0100}-\x{E01EF}             # Variation Selectors Supplement
-\x{2F00}-\x{2FDF}               # CJK Radicals
-\x{2E80}-\x{2EFF}               # CJK Radicals Supplement
-\x{31C0}-\x{31EF}               # CJK Strokes
-\x{2FF0}-\x{2FFF}               # Ideographic Description Characters
-\x{3040}-\x{309F}               # Hiragana
-\x{30A0}-\x{30FF}               # Katakana
-\x{31F0}-\x{31FF}               # Katakana Phonetic Extensions
-\x{1B000}-\x{1B0FF}             # Kana Supplement
-\x{FF00}-\x{FFEF}               # Halfwidth and Fullwidth Forms
-\x{3190}-\x{319F}               # Kanbun
-]/x;
+our %FORMAT;
 
 
 #--------------------------------------------------------------------------
@@ -47,11 +30,13 @@ our $JA = qr/[
 sub convert {
   local $c             = shift;
   local $document_name = shift;
+  local %FORMAT = %{ dclone($c->config->{feature}{format} || {}) };
   my $pod    = shift;
   my $parser = Pod::POM->new();
   my $pom    = $parser->parse_text($pod);
   my $index  = build_index($pom);
   my $body   = Perldoc::Server::Convert::html->print($pom);
+  $body =~ s!</pre><pre class="verbatim">!\n\n!g; # XXXXX
   return $index."<!--  [% TAGS [~ ~] %]  -->\n$body";
 }
 
@@ -117,6 +102,34 @@ sub view_for {
   if ($for->format eq 'html') {
     return $for->text;
   }
+  if ($for->format eq 'original') {
+    my $f = $FORMAT{$for->format} ||= { enabled => 0 };
+    local @ARGV = split /\s+/, $for->text;
+
+    unless (eval { GetOptions(
+                     "--show" => sub { $f->{enabled} = 1 },
+                     "--hide" => sub { $f->{enabled} = 0 },
+                     "--color=s" => sub { $f->{color} = $_[1] },
+                       ) }) {
+      return qq[
+<hr>
+<p>Can't parse <code class="inline">=for</code> stmt around here in
+this pod. </p>
+<pre class="verbatim">
+ =for @{[ $for->format, $for->text ]}
+
+</pre>
+<p>The usage is as follows:
+<pre class="verbatim">
+ usage: =for @{[ $for->format ]} [options]
+   --show            # show the format @{[ $for->format ]}
+   --hide            # hide it
+   --color=color     # set the color (e.g. #aaa) for &lt;p&gt; and &lt;a&gt;
+</pre>
+<hr>
+];
+    }
+  }
   return '';
 }
 
@@ -135,6 +148,21 @@ sub view_begin {
     $Pod::POM::View::HTML::HTML_PROTECT--;
     return $output;
   }
+  if (my $format = $FORMAT{$begin->format}) {
+    if ($begin->format eq 'original' && $format && $format->{enabled}) {
+      $Pod::POM::View::HTML::HTML_PROTECT++;
+      my $pod    = $begin->content->present($self);
+      $Pod::POM::View::HTML::HTML_PROTECT--;
+      local $Pod::POM::View::HTML::HTML_PROTECT = 0;
+      my $parser = Pod::POM->new();
+      my $pom    = $parser->parse_text("=pod\n\n" . $pod);
+      my $output = Perldoc::Server::Convert::html->print($pom);
+      if (my $color = $format->{color}) {
+        $output =~ s/<(p|a)\b/<$1 style="color: $color;"/g;
+      }
+      return $output;
+    }
+  }
   return '';
 }
 
@@ -146,8 +174,8 @@ sub view_head1 {
   local @ANCHOR = ();
   (my $title = $head1->title->present($self)) =~ s/\s+$//;
   my $anchor = $head1->title->present('Pod::POM::View::Text');
-  my @anchor = map { '<a name="'.escape($_).'"></a>' } @ANCHOR, $anchor;
-  return join('', @anchor, "<h1>$title</h1>", $head1->content->present($self));
+  return join('', (map { '<a name="'.escape($_).'"></a>' } @ANCHOR, $anchor),
+              "<h1>$title</h1>\n", $head1->content->present($self));
 }
 
 
@@ -158,8 +186,8 @@ sub view_head2 {
   local @ANCHOR = ();
   (my $title = $head2->title->present($self)) =~ s/\s+$//;
   my $anchor = $head2->title->present('Pod::POM::View::Text');
-  my @anchor = map { '<a name="'.escape($_).'"></a>' } @ANCHOR, $anchor;
-  return join('', @anchor, "<h2>$title</h2>", $head2->content->present($self));
+  return join('', (map { '<a name="'.escape($_).'"></a>' } @ANCHOR, $anchor),
+              "<h2>$title</h2>\n", $head2->content->present($self));
 }
 
 
@@ -171,24 +199,52 @@ sub view_over {
   my $items = $over->item();
   return "" unless @$items;
   my $first_title = $items->[0]->title();
-  if ($first_title =~ /^\s*\*\s*/) {
-    # '=item *' => <ul>
-    $start = "<ul>\n";
-    $end   = "</ul>\n";
-    $strip = qr/^\s*\*\s*/;
-  } elsif ($first_title =~ /^\s*\d+\.?\s*/) {
-    # '=item 1.' or '=item 1 ' => <ol>
-    $start = "<dl>\n";
-    $end   = "</dl>\n";
-    $strip = qr/^\s*\d+\.?\s*/;
+  if ($c->config->{feature}{item}) {
+    if ($first_title =~ /^\s*\*\s*/) {
+      # '=item *' => <ul>
+      $start = "<ul>\n";
+      $end   = "</ul>\n";
+      $strip = qr/^\s*\*\s*/;
+    } elsif ($first_title =~ /^\s*\d+\.?\s*/) {
+      # '=item 1.' or '=item 1 ' => <ol>
+      $start = "<ol>\n";
+      $end   = "</ol>\n";
+      $strip = qr/^\s*\d+\.?\s*/;
+    } elsif ($first_title =~ /^\s*.+/) {
+      # '=item label' => <dl>
+      $start = "<dl>\n";
+      $end   = "</dl>\n";
+      $strip = qr/^\s*/;
+    } else {
+      $start = "<ul>\n";
+      $end   = "</ul>\n";
+      $strip = '';
+    }
   } else {
-    $start = "<ul>\n";
-    $end   = "</ul>\n";
-    $strip = '';
+    if ($first_title =~ /^\s*\*\s*/) {
+      # '=item *' => <ul>
+      $start = "<ul>\n";
+      $end   = "</ul>\n";
+      $strip = qr/^\s*\*\s*/;
+    } elsif ($first_title =~ /^\s*\d+\.?\s*/) {
+      # '=item 1.' or '=item 1 ' => <ol>
+      $start = "<dl>\n";
+      $end   = "</dl>\n";
+      $strip = qr/^\s*\d+\.?\s*/;
+    } elsif ($first_title =~ /^\s*.+/) {
+      # '=item label' => <dl>
+      $start = "<ul>\n";
+      $end   = "</ul>\n";
+      $strip = '';
+    } else {
+      $start = "<ul>\n";
+      $end   = "</ul>\n";
+      $strip = '';
+    }
   }
   
   my $overstack = ref $self ? $self->{ OVER } : \@OVER;
-  push(@$overstack, $strip);
+  push(@$overstack, [ $start, $strip ]);
   my $content = $over->content->present($self);
   pop(@$overstack);
   
@@ -200,31 +256,58 @@ sub view_over {
 
 sub view_item {
   my ($self,$item) = @_;
-  my $over  = ref $self ? $self->{ OVER } : \@OVER;
+  my $over = ref $self ? $self->{ OVER } : \@OVER;
   my $title = $item->title();
-  my $strip = $over->[-1];
-  my $start_tag = '<li>';
-  my $end_tag   = '</li>';
-  if (defined $title) {
+  my ($start, $strip) = @{$over->[-1]};
+  if ($c->config->{feature}{item}) {
     local @ANCHOR = ();
-    $title = $title->present($self) if ref $title;
-    $title =~ s/($strip)// if $strip;
-    if (defined $1) {
-      my $dt = $1;
-      if ($dt =~ /^\d+\.?/) {
-        $start_tag = "<dt>$dt</dt><dd>";
-        $end_tag   = "</dd>";
+    if (defined $title) {
+      $title = $title->present($self) if ref $title;
+      $title =~ s/($strip)// if $strip;
+      $title =~ s/\s+$//;
+      if (length $title) {
+        my $text = $item->title->present('Pod::POM::View::Text');
+        $text =~ s/($strip)// if $strip;
+        $text =~ s/\s+$//;
+        $title = qq[<b>$title</b>] unless $start =~ /<dl>/;
+        $title = qq[<a name="].escape($text).qq["></a>].$title;
       }
     }
-    $title =~ s/\s+$//;
-    if (length $title && ref $item->title) {
-      my $anchor = $item->title->present('Pod::POM::View::Text');
-      my @anchor = map { '<a name="'.escape($_).'"></a>' } @ANCHOR, $anchor;
-      $start_tag = join('', '<dt>', @anchor, $title, '<dd>'); $title = '';
-      $end_tag   = "</dd>";
+    my $block = $item->content->present($self);
+    my $anchor = join('', (map qq[<a name="].escape($_).qq["></a>], @ANCHOR));
+    if ($start =~ /<dl>/) {
+      if ($title) {
+        return "<dt>$anchor$title</dt>\n<dd>$block</dd>\n";
+      } else {
+        return "<dd>$anchor$block</dd>\n";
+      }
+    } else {
+      if ($title) {
+        return "<li>$anchor<p>$title</p>$block</li>\n";
+      } else {
+        return "<li>$anchor$block</li>\n";
+      }
     }
+  } else {
+    my $start_tag = '<li>';
+    my $end_tag = '</li>';
+    if (defined $title) {
+      $title = $title->present($self) if ref $title;
+      $title =~ s/($strip)// if $strip;
+      if (defined $1) {
+        my $dt = $1;
+        if ($dt =~ /^\d+\.?/) {
+          $start_tag = "<dt>$dt</dt><dd>";
+          $end_tag = "</dd>";
+        }
+      }
+      if (length $title) {
+        my $anchor = escape($item->title->present('Pod::POM::View::Text'));
+        $title = qq{<a name="$anchor"></a><b>$title</b>};
+      }
+    }
+    return $start_tag."$title\n".$item->content->present($self).$end_tag."\n";
   }
-  return $start_tag."$title\n".$item->content->present($self).$end_tag."\n";
 }
 
 
@@ -232,8 +315,8 @@ sub view_item {
 
 sub view_textblock {
   my ($self, $text) = @_;
-  if ($c->config->{lang} =~ /^ja/i) {
-    $text =~ s/($JA)\s*\n($JA)/$1$2/g;
+  if ($c->config->{lang} && $c->config->{lang} =~ /^ja/i) {
+    $text =~ s/([^\x21-\xFF])\s*\n([^\x21-\xFF])/$1$2/g;
   }
   return $Pod::POM::View::HTML::HTML_PROTECT? "$text\n" : "<p>$text</p>\n";
 }
@@ -243,7 +326,12 @@ sub view_textblock {
 
 sub view_verbatim {
   my ($self,$text) = @_;
-  $text = encode_entities($text);
+  # $text = encode_entities($text);
+  for ($text) {
+    s/&/&amp;/g;
+    s/</&lt;/g;
+    s/>/&gt;/g;
+  }
   return qq{<pre class="verbatim">$text</pre>};
 }
 
@@ -404,7 +492,9 @@ sub view_seq_entity {
 
 sub view_seq_index {
   my ($self, $entity) = @_;
-  push(@ANCHOR, $entity);
+  if ($c->config->{feature}{index}) {
+    push @ANCHOR, $entity;
+  }
   return '';
 }
 

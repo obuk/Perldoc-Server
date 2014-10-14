@@ -117,6 +117,7 @@ t/controller_Search.t
 t/controller_Source.t
 t/controller_View.t
 t/convert_html_anchor.t
+t/convert_html_item.t
 t/convert_html_ja.t
 t/convert_Man2HTML.t
 t/convert_Verbatim.t
