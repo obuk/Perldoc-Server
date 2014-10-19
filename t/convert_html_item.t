@@ -222,13 +222,13 @@ EOT
     $got =~ s/<!--.*?-->//sg;
     my $expected = <<EOT;
 <ol>
-  <a name="tx1"></a> <li> <p><b>tx1</b></p> <p>tb1</p> </li>
-  <a name="tx2"></a> <li> <p><b>tx2</b></p> <p>tb2</p> </li>
+  <li> <a name="tx1"></a> <p><b>tx1</b></p> <p>tb1</p> </li>
+  <li> <a name="tx2"></a> <p><b>tx2</b></p> <p>tb2</p> </li>
 </ol>
 <p>xxx</p>
 <ol start="3">
-  <a name="tx3"></a> <li> <p><b>tx3</b></p> <p>tb3</p> </li>
-  <a name="tx4"></a> <li> <p><b>tx4</b></p> <p>tb4</p> </li>
+  <li> <a name="tx3"></a> <p><b>tx3</b></p> <p>tb3</p> </li>
+  <li> <a name="tx4"></a> <p><b>tx4</b></p> <p>tb4</p> </li>
 </ol>
 EOT
 ;
@@ -279,9 +279,9 @@ EOT
     $got =~ s/<!--.*?-->//sg;
     my $expected = <<EOT;
 <dl>
-  <a name="x1"></a><dt>x1</dt>
+  <dt><a name="x1"></a>x1</dt>
   <dd> <p>tb1</p> </dd>
-  <a name="x2"></a><dt>x2</dt>
+  <dt><a name="x2"></a>x2</dt>
   <dd> <p>tb2</p> </dd>
 </dl>
 EOT
@@ -318,8 +318,8 @@ EOT
     $got =~ s/<!--.*?-->//sg;
     my $expected = <<EOT;
 <ul>
-  <li><a name="a)"></a><b>a)</b> <p>tb1</p> </li>
-  <li><a name="b)"></a><b>b)</b> <p>tb2</p> </li>
+  <li> <a name="a)"></a><b>a)</b> <p>tb1</p> </li>
+  <li> <a name="b)"></a><b>b)</b> <p>tb2</p> </li>
 </ul>
 EOT
 ;
@@ -333,8 +333,8 @@ EOT
     $got =~ s/<!--.*?-->//sg;
     my $expected = <<EOT;
 <ul class="nobullet">
-  <a name="a)"></a><li class="hangingindent"><p>a)&ensp;tb1</p> </li>
-  <a name="b)"></a><li class="hangingindent"><p>b)&ensp;tb2</p> </li>
+  <li class="hangingindent"> <a name="a)"></a> <p>a)&ensp;tb1</p> </li>
+  <li class="hangingindent"> <a name="b)"></a> <p>b)&ensp;tb2</p> </li>
 </ul>
 EOT
 ;

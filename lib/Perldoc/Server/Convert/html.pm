@@ -286,17 +286,15 @@ sub view_item {
     $anchor = join('', map '<a name="'.escape($_).'"></a>', @ANCHOR) . $anchor;
     if ($style eq 'hangingindent') {
       $start_tag = qq{<li class="$style">};
-      if ($title) {
-        $block =~ s/^<p[^>]*>/$&$title&ensp;/
-            or $start_tag .= qq{$title&ensp;};
-      }
+      $title = '' if $title && $block =~ s/<p[^>]*>/$&$title&ensp;/;
     } elsif ($style) {
-      ($start_tag, $end_tag) = ('<dd>', '</dd>');
-      $start_tag = qq{<dt>$title</dt>\n} . $start_tag if $title;
+      ($start_tag, $title, $end_tag) = $title
+          ? ('<dt>', "$title</dt><dd>", '</dd>')
+          : ('<dd>', '',                       );
     } else {
-      $start_tag .= qq{<p><b>$title</b></p>} if $title;
+      $title = qq{<p><b>$title</b></p>} if $title;
     }
-    return $anchor . $start_tag . $block . $end_tag . "\n";
+    return $start_tag . $anchor . $title . $block . $end_tag . "\n";
   } else {
     if (defined $title) {
       $title = $title->present($self) if ref $title;
