@@ -290,7 +290,7 @@ sub view_item {
     } elsif ($style) {
       ($start_tag, $title, $end_tag) = $title
           ? ('<dt>', "$title</dt><dd>", '</dd>')
-          : ('<dd>', '',                       );
+          : ('<dd>', '',                '</dd>');
     } else {
       $title = qq{<p><b>$title</b></p>} if $title;
     }
