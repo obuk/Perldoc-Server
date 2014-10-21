@@ -91,7 +91,9 @@ sub find {
   
   return () unless $pod;
   my @search_path = $self->search_path;
-  return Pod::Simple::Search->new->inc(0)->find($pod, @search_path,map{"$_/pods"} @search_path);
+  my $laborious = $self->{c}->config->{feature}{search}{laborious};
+  return Pod::Simple::Search->new->inc(0)->laborious($laborious)
+      ->find($pod, @search_path,map{"$_/pods"} @search_path);
 }
 
 

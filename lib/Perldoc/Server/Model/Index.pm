@@ -1,3 +1,5 @@
+# -*- perl-indent-level: 2; indent-tabs-mode: nil -*-
+
 package Perldoc::Server::Model::Index;
 
 use strict;
@@ -37,7 +39,9 @@ sub name2path {
   
   state $name2path;
   if (!$name2path or $monitor->scan) {
-    $name2path = Pod::Simple::Search->new->inc(0)->survey((map {"$_/pods"} @search_path),@search_path);
+    my $laborious = $self->{c}->config->{feature}{search}{laborious};
+    $name2path = Pod::Simple::Search->new->inc(0)->laborious($laborious)
+	->survey((map {"$_/pods"} @search_path),@search_path);
   }
   
   return $name2path;

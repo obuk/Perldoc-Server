@@ -8,8 +8,6 @@ use 5.010;
 use experimental qw(smartmatch);
 use parent 'Catalyst::Controller';
 
-use Perldoc::Server::View::Pod2HTML;
-
 =head1 NAME
 
 Perldoc::Server::Controller::Search - Catalyst Controller
@@ -53,26 +51,7 @@ sub index :Path :Args(0) {
         return $c->response->redirect( $c->uri_for('/view', $query) );
       }
     }
-
-    # search more - it will be slow.
-    my @perldoc = ('perldoc');
-    if (my $lang = $c->config->{lang}) {
-      push @perldoc, '-L', $lang;
-    }
-    my $v = `@perldoc -v '$query'`;
-    if ($? == 0) {
-      warn "@perldoc -v '$query' >/dev/null\n";
-      return $c->response->redirect( $c->uri_for("/view/perlvar#$query") );
-    }
     
-    my $q = `@perldoc -u -q '$query'`;
-    if ($? == 0) {
-      $q =~ s!^(=head1 Found in).*/([^/]+pod)$!$1 $2!mg;
-      $c->stash->{pod} = $q;
-      $c->stash->{title} = "perldoc -q '$query'";
-      return Perldoc::Server::View::Pod2HTML->process($c);
-    }
-
     $c->stash->{query} = $query;
   }
   

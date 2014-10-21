@@ -45,7 +45,7 @@ EOT
     like $got, qr/$expected/, $name;
   }
   {
-    $c->{feature}{item} = 'yes';
+    $c->{feature}{pod}{item} = 'yes';
     my $got = Perldoc::Server::Convert::html::convert($c, $0, $pod);
     $got =~ s/<!--.*?-->//sg;
     my $expected = <<EOT;
@@ -95,7 +95,7 @@ EOT
     like $got, qr/$expected/, $name;
   }
   {
-    $c->{feature}{item} = 'yes';
+    $c->{feature}{pod}{item} = 'yes';
     my $got = Perldoc::Server::Convert::html::convert($c, $0, $pod);
     $got =~ s/<!--.*?-->//sg;
     my $expected = <<EOT;
@@ -148,7 +148,7 @@ EOT
     like $got, qr/$expected/, $name;
   }
   {
-    $c->{feature}{item} = 'yes';
+    $c->{feature}{pod}{item} = 'yes';
     my $got = Perldoc::Server::Convert::html::convert($c, $0, $pod);
     $got =~ s/<!--.*?-->//sg;
     my $expected = <<EOT;
@@ -217,7 +217,7 @@ EOT
     like $got, qr/$expected/, $name;
   }
   {
-    $c->{feature}{item} = 'yes';
+    $c->{feature}{pod}{item} = 'yes';
     my $got = Perldoc::Server::Convert::html::convert($c, $0, $pod);
     $got =~ s/<!--.*?-->//sg;
     my $expected = <<EOT;
@@ -274,7 +274,7 @@ EOT
     like $got, qr/$expected/, "$name-more";
   }
   {
-    $c->{feature}{item} = 'yes';
+    $c->{feature}{pod}{item} = 'yes';
     my $got = Perldoc::Server::Convert::html::convert($c, $0, $pod);
     $got =~ s/<!--.*?-->//sg;
     my $expected = <<EOT;
@@ -328,7 +328,7 @@ EOT
     like $got, qr/$expected/, "$name-more";
   }
   {
-    $c->{feature}{item} = 'yes';
+    $c->{feature}{pod}{item} = 'yes';
     my $got = Perldoc::Server::Convert::html::convert($c, $0, $pod);
     $got =~ s/<!--.*?-->//sg;
     my $expected = <<EOT;

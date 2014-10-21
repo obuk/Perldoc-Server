@@ -200,7 +200,7 @@ sub view_over {
   my $items = $over->item();
   return "" unless @$items;
   my $first_title = $items->[0]->title();
-  if ($c->config->{feature}{item}) {
+  if ($c->config->{feature}{pod}{item}) {
     if ($first_title =~ /^\s*\*\s*/) {
       # '=item *' => <ul>
       $start = "<ul>\n";
@@ -269,7 +269,7 @@ sub view_item {
   my ($strip, $style) = @{$over->[-1]};
   my ($start_tag, $end_tag) = ('<li>', '</li>');
   my $anchor = '';
-  if ($c->config->{feature}{item}) {
+  if ($c->config->{feature}{pod}{item}) {
     local @ANCHOR = ();
     if (defined $title) {
       $title = $title->present($self) if ref $title;
@@ -497,7 +497,7 @@ sub view_seq_entity {
 
 sub view_seq_index {
   my ($self, $entity) = @_;
-  if ($c->config->{feature}{index}) {
+  if ($c->config->{feature}{pod}{index}) {
     push @ANCHOR, $entity;
   }
   return '';
