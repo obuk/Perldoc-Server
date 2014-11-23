@@ -102,7 +102,7 @@ sub view_for {
   if ($for->format eq 'html') {
     return $for->text;
   }
-  if ($for->format eq 'original') {
+  else {
     my $f = $FORMAT{$for->format} ||= { enabled => 0 };
     local @ARGV = split /\s+/, $for->text;
 
@@ -149,7 +149,7 @@ sub view_begin {
     return $output;
   }
   if (my $format = $FORMAT{$begin->format}) {
-    if ($begin->format eq 'original' && $format && $format->{enabled}) {
+    if ($format->{enabled}) {
       $Pod::POM::View::HTML::HTML_PROTECT++;
       my $pod    = $begin->content->present($self);
       $Pod::POM::View::HTML::HTML_PROTECT--;
