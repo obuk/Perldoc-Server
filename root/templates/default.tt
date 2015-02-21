@@ -19,8 +19,7 @@
           
           <div id="header">
             <div id="homepage_link">
-              <!-- a href="/"></a -->
-              <a href="[% c.uri_for('/') %]"></a>
+              <a href="/"></a>
             </div>
             <div id="strapline">
               Local Perl Documentation

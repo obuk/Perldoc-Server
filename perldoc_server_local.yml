@@ -1,0 +1,13 @@
+lang: ja
+# lang: it
+# lang: fr
+
+# using_frontend_proxy: 1
+
+feature:
+  pod:
+    index: true
+    item:  true
+  format:
+    original:
+      color: \#aaa

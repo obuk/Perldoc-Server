@@ -23,7 +23,7 @@ our ($c,$document_name);
 our @OVER;
 our @ANCHOR;
 our %FORMAT;
-
+our $RAW;
 
 #--------------------------------------------------------------------------
 
@@ -150,10 +150,7 @@ sub view_begin {
   }
   if (my $format = $FORMAT{$begin->format}) {
     if ($format->{enabled}) {
-      $Pod::POM::View::HTML::HTML_PROTECT++;
-      my $pod    = $begin->content->present($self);
-      $Pod::POM::View::HTML::HTML_PROTECT--;
-      local $Pod::POM::View::HTML::HTML_PROTECT = 0;
+      my $pod    = $begin->content->present('Pod::POM::View::Text');
       my $parser = Pod::POM->new();
       my $pom    = $parser->parse_text("=pod\n\n" . $pod);
       my $output = Perldoc::Server::Convert::html->print($pom);

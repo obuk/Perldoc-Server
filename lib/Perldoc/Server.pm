@@ -26,7 +26,7 @@ use Catalyst qw/
                 Session::State::Cookie
                 Session::Store::File
                 Static::Simple/;
-our $VERSION = '0.10_08';
+our $VERSION = '0.10_09';
 
 # Configure the application.
 #
@@ -47,8 +47,8 @@ __PACKAGE__->config( name             => 'Perldoc::Server',
                      search_path      => $ENV{PERLDOC_SERVER_SEARCH_PATH} ? [split /\r\n|\n/,$ENV{PERLDOC_SERVER_SEARCH_PATH}] : \@INC,
                      'View::TT'       => { INCLUDE_PATH => __PACKAGE__->path_to('root','templates')},
                      'View::Pod2HTML' => { INCLUDE_PATH => __PACKAGE__->path_to('root','templates')},
-		     encoding         => 'utf-8',
-		     lang             => 'en-gb',
+                     encoding         => 'utf-8',
+                     lang             => 'en-gb',
                     );
 
 # Set default view to TT

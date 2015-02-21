@@ -36,9 +36,8 @@ lib/Perldoc/Server/View/Pod2HTML.pm
 lib/Perldoc/Server/View/Pod2Source.pm
 lib/Perldoc/Server/View/TT.pm
 Makefile.PL
-MANIFEST			This list of files
+MANIFEST
 META.yml
-Perldoc-Server-0.10_08.tar.gz
 perldoc_server.conf
 README
 root/favicon.ico

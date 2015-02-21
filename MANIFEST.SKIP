@@ -1,0 +1,14 @@
+\.bak$
+\.old$
+\.orig$
+^MANIFEST\.SKIP
+^MYMETA\.*
+^Makefile$
+^Perldoc-Server-.*
+^STAT.yml$
+^\.git
+^blib
+^cover_db
+^pm_to_blib$
+local.yml$
+~$
