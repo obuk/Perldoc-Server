@@ -416,7 +416,7 @@ sub view_seq_link {
     return Pod::POM::View::HTML::make_href($href, $inferred);
   } elsif ($type eq 'man') {
     #return qq{<i>$inferred</i>};
-    my $href = $c->uri_for("/view/$inferred");
+    my $href = $c->uri_for("/view/$page");
     return qq{<a href="$href">$inferred</a>};
   } elsif ($type eq 'url') {
     return qq{<a href="$page">$inferred</a>};
