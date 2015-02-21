@@ -8,6 +8,8 @@ use parent 'Catalyst::Model';
 
 use File::Slurp qw/slurp/;
 use Memoize;
+use Pod::POM;
+use Pod::POM::View::Text;
 use Pod::Simple::Search;
 
 memoize('section', NORMALIZER => sub { $_[1] });
@@ -103,51 +105,16 @@ sub title {
   
   unless (exists $name2title{$page}) {
     if (my $file = $self->find($page)) {
-      if (my $title = $self->parse_abstract($page, $file)) {
-        $title =~ s/E<(.*?)>/&$1;/g;
-        $title =~ s/[A-DF-Z]<(.*?)>/$1/g;
-        $title =~ s/.*? -+\s+//;
-        $title =~ s/\(\$.*?\$\)//;
-        $name2title{$page} = $title;
+      my $parser = Pod::POM->new();
+      my $pom = $parser->parse_file($file) or die $parser->error();
+      my ($head) = $pom->head1();
+      for (split "\n", $head->content->present('Pod::POM::View::Text')) {
+        $name2title{$1} = $2 if /^([a-z]\S+)\s+-+\s+(\S.*)/i;
       }
     }
   }
   
   return $name2title{$page};
-}
-
-# added =encoding based on ExtUtils/MM_Unix.pm
-sub parse_abstract {
-  my($self, $page, $parsefile) = @_;
-  my $result;
-
-  local $/ = "\n"; local $_;
-  open(my $fh, '<', $parsefile) or die "Could not open '$parsefile': $!";
-  my $inpod = 0; my $binmode; my @begin;
-  while (<$fh>) {
-    $inpod = /^=(?!cut)/ ? 1 : /^=cut/ ? 0 : $inpod;
-    next if !$inpod;
-    chop;
-    $binmode ||= /^=encoding\s+(\S+)/ && binmode($fh, ":encoding($1)");
-    if (/^=begin\s+(\S+)/) {
-      push(@begin, $1);
-    } elsif (/^=end\s+(\S+)/ && @begin && $begin[-1] eq $1) {
-      pop(@begin);
-    } elsif (@begin) {
-      next;
-    }
-    if ( /^($page(?:\.pm)?\s+ -+ \s+)(.*)/ix ) {
-      $result = $2;
-      next;
-    }
-    next unless $result;
-    if ( $result && ( m/^\s*$/ || m/^\=/ ) ) {
-      last;
-    }
-    $result = join ' ', $result, $_;
-  }
-  close $fh;
-  return $result;
 }
 
 
