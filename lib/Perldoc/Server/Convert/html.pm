@@ -102,7 +102,7 @@ sub view_for {
   if ($for->format eq 'html') {
     return $for->text;
   }
-  if ($for->format eq 'original') {
+  else {
     my $f = $FORMAT{$for->format} ||= { enabled => 0 };
     local @ARGV = split /\s+/, $for->text;
 
@@ -149,7 +149,7 @@ sub view_begin {
     return $output;
   }
   if (my $format = $FORMAT{$begin->format}) {
-    if ($begin->format eq 'original' && $format && $format->{enabled}) {
+    if ($format->{enabled}) {
       $Pod::POM::View::HTML::HTML_PROTECT++;
       my $pod    = $begin->content->present($self);
       $Pod::POM::View::HTML::HTML_PROTECT--;
@@ -196,24 +196,32 @@ sub view_head2 {
 sub view_over {
   my ($self, $over) = @_;
   my ($start, $end, $strip);
+  my $style = '';
   my $items = $over->item();
   return "" unless @$items;
   my $first_title = $items->[0]->title();
-  if ($c->config->{feature}{item}) {
+  if ($c->config->{feature}{pod}{item}) {
     if ($first_title =~ /^\s*\*\s*/) {
       # '=item *' => <ul>
       $start = "<ul>\n";
       $end   = "</ul>\n";
       $strip = qr/^\s*\*\s*/;
-    } elsif ($first_title =~ /^\s*\d+\.?\s*/) {
+    } elsif ($first_title =~ /^\s*(\d+)\.?\s*/) {
       # '=item 1.' or '=item 1 ' => <ol>
-      $start = "<ol>\n";
+      $start = $1 == 1 ? "<ol>\n" : qq{<ol start="$1">\n};
       $end   = "</ol>\n";
       $strip = qr/^\s*\d+\.?\s*/;
+    } elsif ($first_title =~ /^\s*[\w]\)\s*/) {
+      # '=item a)' => <ul>
+      $start = qq{<ul class="nobullet">\n};
+      $end   = "</ul>\n";
+      $style = 'hangingindent';
+      $strip = qr/^\s*/;
     } elsif ($first_title =~ /^\s*.+/) {
       # '=item label' => <dl>
       $start = "<dl>\n";
       $end   = "</dl>\n";
+      $style = 'default';
       $strip = qr/^\s*/;
     } else {
       $start = "<ul>\n";
@@ -244,7 +252,7 @@ sub view_over {
   }
   
   my $overstack = ref $self ? $self->{ OVER } : \@OVER;
-  push(@$overstack, [ $start, $strip ]);
+  push(@$overstack, [ $strip, $style ]);
   my $content = $over->content->present($self);
   pop(@$overstack);
   
@@ -258,8 +266,10 @@ sub view_item {
   my ($self,$item) = @_;
   my $over = ref $self ? $self->{ OVER } : \@OVER;
   my $title = $item->title();
-  my ($start, $strip) = @{$over->[-1]};
-  if ($c->config->{feature}{item}) {
+  my ($strip, $style) = @{$over->[-1]};
+  my ($start_tag, $end_tag) = ('<li>', '</li>');
+  my $anchor = '';
+  if ($c->config->{feature}{pod}{item}) {
     local @ANCHOR = ();
     if (defined $title) {
       $title = $title->present($self) if ref $title;
@@ -269,28 +279,23 @@ sub view_item {
         my $text = $item->title->present('Pod::POM::View::Text');
         $text =~ s/($strip)// if $strip;
         $text =~ s/\s+$//;
-        $title = qq[<b>$title</b>] unless $start =~ /<dl>/;
-        $title = qq[<a name="].escape($text).qq["></a>].$title;
+        $anchor = qq[<a name="].escape($text).qq["></a>];
       }
     }
     my $block = $item->content->present($self);
-    my $anchor = join('', (map qq[<a name="].escape($_).qq["></a>], @ANCHOR));
-    if ($start =~ /<dl>/) {
-      if ($title) {
-        return "<dt>$anchor$title</dt>\n<dd>$block</dd>\n";
-      } else {
-        return "<dd>$anchor$block</dd>\n";
-      }
+    $anchor = join('', map '<a name="'.escape($_).'"></a>', @ANCHOR) . $anchor;
+    if ($style eq 'hangingindent') {
+      $start_tag = qq{<li class="$style">};
+      $title = '' if $title && $block =~ s/<p[^>]*>/$&$title&ensp;/;
+    } elsif ($style) {
+      ($start_tag, $title, $end_tag) = $title
+          ? ('<dt>', "$title</dt><dd>", '</dd>')
+          : ('<dd>', '',                '</dd>');
     } else {
-      if ($title) {
-        return "<li>$anchor<p>$title</p>$block</li>\n";
-      } else {
-        return "<li>$anchor$block</li>\n";
-      }
+      $title = qq{<p><b>$title</b></p>} if $title;
     }
+    return $start_tag . $anchor . $title . $block . $end_tag . "\n";
   } else {
-    my $start_tag = '<li>';
-    my $end_tag = '</li>';
     if (defined $title) {
       $title = $title->present($self) if ref $title;
       $title =~ s/($strip)// if $strip;
@@ -411,7 +416,7 @@ sub view_seq_link {
     return Pod::POM::View::HTML::make_href($href, $inferred);
   } elsif ($type eq 'man') {
     #return qq{<i>$inferred</i>};
-    my $href = $c->uri_for("/view/$inferred");
+    my $href = $c->uri_for("/view/$page");
     return qq{<a href="$href">$inferred</a>};
   } elsif ($type eq 'url') {
     return qq{<a href="$page">$inferred</a>};
@@ -492,7 +497,7 @@ sub view_seq_entity {
 
 sub view_seq_index {
   my ($self, $entity) = @_;
-  if ($c->config->{feature}{index}) {
+  if ($c->config->{feature}{pod}{index}) {
     push @ANCHOR, $entity;
   }
   return '';

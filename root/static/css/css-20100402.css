@@ -889,3 +889,14 @@ div.form_buttons input {
 }
 
 /* @end */
+
+/* hanging indent */
+ul.nobullet {
+	list-style-type: none;
+	padding-left: 0em
+}
+
+li.hangingindent {
+	text-indent: -1em;
+	padding-left: 1em;
+}

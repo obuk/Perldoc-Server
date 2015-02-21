@@ -38,6 +38,7 @@ lib/Perldoc/Server/View/TT.pm
 Makefile.PL
 MANIFEST			This list of files
 META.yml
+Perldoc-Server-0.10_08.tar.gz
 perldoc_server.conf
 README
 root/favicon.ico
@@ -116,9 +117,9 @@ t/controller_Index.t
 t/controller_Search.t
 t/controller_Source.t
 t/controller_View.t
-t/convert_html_anchor.t
-t/convert_html_item.t
-t/convert_html_ja.t
+t/convert_html_lang.t
+t/convert_html_pod_index.t
+t/convert_html_pod_item.t
 t/convert_Man2HTML.t
 t/convert_Verbatim.t
 t/model_Index.t

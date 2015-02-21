@@ -45,7 +45,7 @@ EOT
     like $got, qr/$expected/, $name;
   }
   {
-    $c->{feature}{item} = 'yes';
+    $c->{feature}{pod}{item} = 'yes';
     my $got = Perldoc::Server::Convert::html::convert($c, $0, $pod);
     $got =~ s/<!--.*?-->//sg;
     my $expected = <<EOT;
@@ -95,7 +95,7 @@ EOT
     like $got, qr/$expected/, $name;
   }
   {
-    $c->{feature}{item} = 'yes';
+    $c->{feature}{pod}{item} = 'yes';
     my $got = Perldoc::Server::Convert::html::convert($c, $0, $pod);
     $got =~ s/<!--.*?-->//sg;
     my $expected = <<EOT;
@@ -148,7 +148,7 @@ EOT
     like $got, qr/$expected/, $name;
   }
   {
-    $c->{feature}{item} = 'yes';
+    $c->{feature}{pod}{item} = 'yes';
     my $got = Perldoc::Server::Convert::html::convert($c, $0, $pod);
     $got =~ s/<!--.*?-->//sg;
     my $expected = <<EOT;
@@ -178,6 +178,20 @@ tb2
 
 =back
 
+xxx
+
+=over
+
+=item 3. tx3
+
+tb3
+
+=item 4. tx4
+
+tb4
+
+=back
+
 =cut
 EOT
     ;
@@ -187,11 +201,15 @@ EOT
     my $got = Perldoc::Server::Convert::html::convert($c, $0, $pod);
     $got =~ s/<!--.*?-->//sg;
     my $expected = <<EOT;
+
 <dl>
-  <dt>1. </dt>
-  <dd><a name="1.-tx1"></a><b>tx1</b> <p>tb1</p> </dd>
-  <dt>2. </dt>
-  <dd><a name="2.-tx2"></a><b>tx2</b> <p>tb2</p> </dd>
+  <dt>1. </dt><dd><a name="1.-tx1"></a><b>tx1</b> <p>tb1</p> </dd>
+  <dt>2. </dt><dd><a name="2.-tx2"></a><b>tx2</b> <p>tb2</p> </dd>
+</dl>
+<p>xxx</p>
+<dl>
+  <dt>3. </dt><dd><a name="3.-tx3"></a><b>tx3</b> <p>tb3</p> </dd>
+  <dt>4. </dt><dd><a name="4.-tx4"></a><b>tx4</b> <p>tb4</p> </dd>
 </dl>
 EOT
 ;
@@ -199,13 +217,18 @@ EOT
     like $got, qr/$expected/, $name;
   }
   {
-    $c->{feature}{item} = 'yes';
+    $c->{feature}{pod}{item} = 'yes';
     my $got = Perldoc::Server::Convert::html::convert($c, $0, $pod);
     $got =~ s/<!--.*?-->//sg;
     my $expected = <<EOT;
 <ol>
-  <li> <p><a name="tx1"></a><b>tx1</b></p> <p>tb1</p> </li>
-  <li> <p><a name="tx2"></a><b>tx2</b></p> <p>tb2</p> </li>
+  <li> <a name="tx1"></a> <p><b>tx1</b></p> <p>tb1</p> </li>
+  <li> <a name="tx2"></a> <p><b>tx2</b></p> <p>tb2</p> </li>
+</ol>
+<p>xxx</p>
+<ol start="3">
+  <li> <a name="tx3"></a> <p><b>tx3</b></p> <p>tb3</p> </li>
+  <li> <a name="tx4"></a> <p><b>tx4</b></p> <p>tb4</p> </li>
 </ol>
 EOT
 ;
@@ -251,7 +274,7 @@ EOT
     like $got, qr/$expected/, "$name-more";
   }
   {
-    $c->{feature}{item} = 'yes';
+    $c->{feature}{pod}{item} = 'yes';
     my $got = Perldoc::Server::Convert::html::convert($c, $0, $pod);
     $got =~ s/<!--.*?-->//sg;
     my $expected = <<EOT;
@@ -263,6 +286,59 @@ EOT
 </dl>
 EOT
 ;
+    $expected =~ s/\s+/\\s*/sg;
+    like $got, qr/$expected/, "$name-more";
+  }
+}
+
+# ============================================================
+
+{
+  my $name = 'hangingindent';
+  my $pod = <<EOT;
+=over
+
+=item a)
+
+tb1
+
+=item b)
+
+tb2
+
+=back
+
+=cut
+EOT
+    ;
+
+  my $c = bless { };
+  {
+    my $got = Perldoc::Server::Convert::html::convert($c, $0, $pod);
+    $got =~ s/<!--.*?-->//sg;
+    my $expected = <<EOT;
+<ul>
+  <li> <a name="a)"></a><b>a)</b> <p>tb1</p> </li>
+  <li> <a name="b)"></a><b>b)</b> <p>tb2</p> </li>
+</ul>
+EOT
+;
+    $expected =~ s/[)]/\\$&/sg;
+    $expected =~ s/\s+/\\s*/sg;
+    like $got, qr/$expected/, "$name-more";
+  }
+  {
+    $c->{feature}{pod}{item} = 'yes';
+    my $got = Perldoc::Server::Convert::html::convert($c, $0, $pod);
+    $got =~ s/<!--.*?-->//sg;
+    my $expected = <<EOT;
+<ul class="nobullet">
+  <li class="hangingindent"> <a name="a)"></a> <p>a)&ensp;tb1</p> </li>
+  <li class="hangingindent"> <a name="b)"></a> <p>b)&ensp;tb2</p> </li>
+</ul>
+EOT
+;
+    $expected =~ s/[)]/\\$&/sg;
     $expected =~ s/\s+/\\s*/sg;
     like $got, qr/$expected/, "$name-more";
   }

@@ -25,7 +25,7 @@ X<i>
 EOT
 
 {
-  my $c = bless { feature => { index => 1, item => 1 } };
+  my $c = bless { feature => { pod => { index => 1, item => 1 } } };
   my $html = Perldoc::Server::Convert::html::convert($c, $0, $pod);
   like $html, qr{<a name="h1"></a><a name="H1">};
   like $html, qr{<a name="h2"></a><a name="H2">};
@@ -38,7 +38,7 @@ EOT
 }
 
 {
-  my $c = bless { feature => { index => 0, item => 1 } };
+  my $c = bless { feature => { pod => { index => 0, item => 1 } } };
   my $html = Perldoc::Server::Convert::html::convert($c, $0, $pod);
   unlike $html, qr{<a name="h1"></a>};
   unlike $html, qr{<a name="h2"></a>};
