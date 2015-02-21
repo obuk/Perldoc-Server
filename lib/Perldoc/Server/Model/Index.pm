@@ -39,9 +39,7 @@ sub name2path {
   
   state $name2path;
   if (!$name2path or $monitor->scan) {
-    my $laborious = $self->{c}->config->{feature}{search}{laborious};
-    $name2path = Pod::Simple::Search->new->inc(0)->laborious($laborious)
-	->survey((map {"$_/pods"} @search_path),@search_path);
+      $name2path = Pod::Simple::Search->new->inc(0)->survey((map {"$_/pods"} @search_path),@search_path);
   }
   
   return $name2path;
