@@ -8,6 +8,7 @@ feature:
   pod:
     index: true
     item:  true
-  format:
-    original:
-      color: \#aaa
+#  format:
+#    original:
+#      magic: 0
+#      color: "#aaa"

@@ -94,6 +94,8 @@ sub view_pod {
 
 #--------------------------------------------------------------------------
 
+use Parse::CommandLine;
+
 sub view_for {
   my ($self,$for) = @_;
   if ($for->format eq 'text') {
@@ -102,15 +104,15 @@ sub view_for {
   if ($for->format eq 'html') {
     return $for->text;
   }
-  else {
-    my $f = $FORMAT{$for->format} ||= { enabled => 0 };
-    local @ARGV = split /\s+/, $for->text;
-
+  if (exists $FORMAT{$for->format}{magic}) {
+    my $f = $FORMAT{$for->format};
+    local @ARGV = parse_command_line($for->text);
     unless (eval { GetOptions(
-                     "--show" => sub { $f->{enabled} = 1 },
-                     "--hide" => sub { $f->{enabled} = 0 },
-                     "--color=s" => sub { $f->{color} = $_[1] },
-                       ) }) {
+      "magic!" => \ $f->{magic},
+      "show" => sub { $f->{magic} = 1 },
+      "hide" => sub { $f->{magic} = 0 },
+      "color=s" => \ $f->{color},
+     ) }) {
       return qq[
 <hr>
 <p>Can't parse <code class="inline">=for</code> stmt around here in
@@ -149,7 +151,7 @@ sub view_begin {
     return $output;
   }
   if (my $format = $FORMAT{$begin->format}) {
-    if ($format->{enabled}) {
+    if ($format->{magic}) {
       my $pod    = $begin->content->present('Pod::POM::View::Text');
       my $parser = Pod::POM->new();
       my $pom    = $parser->parse_text("=pod\n\n" . $pod);

@@ -25,6 +25,7 @@ requires 'File::Monitor';
 requires 'HTML::Entities';
 requires 'MRO::Compat';
 requires 'experimental';
+requires 'Parse::CommandLine';
 
 catalyst_par_core;
 catalyst_par_engine 'HTTP';
