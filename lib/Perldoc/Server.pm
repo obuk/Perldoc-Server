@@ -20,13 +20,15 @@ use NEXT;
 #                 directory
 
 use parent qw/Catalyst/;
-use Catalyst qw/
+use Catalyst qw/-Debug
                 ConfigLoader
                 Session
                 Session::State::Cookie
                 Session::Store::File
-                Static::Simple/;
-our $VERSION = '0.10_09';
+                Static::Simple
+                StackTrace
+               /;
+our $VERSION = '0.10_10';
 
 # Configure the application.
 #

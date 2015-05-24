@@ -12,6 +12,7 @@ requires 'Catalyst::Plugin::Session';
 requires 'Catalyst::Plugin::Session::State::Cookie';
 requires 'Catalyst::Plugin::Session::Store::File';
 requires 'Catalyst::Action::RenderView';
+requires 'Catalyst::Restarter';
 requires 'parent';
 requires 'Config::General'; # This should reflect the config file format you've chosen
                  # See Catalyst::Plugin::ConfigLoader for supported formats
@@ -20,12 +21,18 @@ requires 'OpenThought';
 requires 'Pod::POM' => '0.23';
 requires 'Catalyst::View::TT';
 requires 'File::ShareDir';
-requires 'File::Slurp';
+#requires 'File::Slurp';
 requires 'File::Monitor';
 requires 'HTML::Entities';
 requires 'MRO::Compat';
 requires 'experimental';
 requires 'Parse::CommandLine';
+requires 'Man2Html';		# xxx
+
+# convert to pdf
+requires 'File::Temp';
+requires 'Perl6::Slurp';
+requires 'Pod::Lualatex';	# xxx
 
 catalyst_par_core;
 catalyst_par_engine 'HTTP';

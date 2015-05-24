@@ -6,7 +6,8 @@ use 5.010;
 use experimental qw(smartmatch);
 use parent 'Catalyst::Model';
 
-use File::Slurp qw/slurp/;
+#use File::Slurp qw/slurp/;
+use Perl6::Slurp;
 use Memoize;
 use Pod::POM;
 use Pod::POM::View::Text;

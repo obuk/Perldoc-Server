@@ -86,6 +86,9 @@
                   </div>
                   <div class="page_links" id="page_links_top">
                     <a href="#" onClick="toolbar.goToTop();return false;">Go to top</a>
+		    [% IF path %]
+		    - <a href="[% c.uri_for('/pdf', path.join('/')) %]">Show PDF</a>
+		    [% END %]
                   </div>
                   <div class="page_links" id="page_links_bottom">
                     [% IF page_index %]
