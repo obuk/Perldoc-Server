@@ -34,6 +34,9 @@ requires 'File::Temp';
 requires 'Perl6::Slurp';
 requires 'Pod::Lualatex';	# xxx
 
+# debug
+requires 'Catalyst::Plugin::StackTrace'; # xxx
+
 catalyst_par_core;
 catalyst_par_engine 'HTTP';
 catalyst_par_script 'perldoc_server_bin.pl';

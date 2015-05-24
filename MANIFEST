@@ -18,6 +18,7 @@ lib/Perldoc/Server/Controller/Ajax/PerlSyntax.pm
 lib/Perldoc/Server/Controller/Functions.pm
 lib/Perldoc/Server/Controller/Index.pm
 lib/Perldoc/Server/Controller/Index/Modules.pm
+lib/Perldoc/Server/Controller/Pdf.pm
 lib/Perldoc/Server/Controller/Root.pm
 lib/Perldoc/Server/Controller/Search.pm
 lib/Perldoc/Server/Controller/Source.pm
@@ -33,6 +34,7 @@ lib/Perldoc/Server/View/Function.pm
 lib/Perldoc/Server/View/Man2HTML.pm
 lib/Perldoc/Server/View/OpenThoughtTT.pm
 lib/Perldoc/Server/View/Pod2HTML.pm
+lib/Perldoc/Server/View/Pod2Pdf.pm
 lib/Perldoc/Server/View/Pod2Source.pm
 lib/Perldoc/Server/View/TT.pm
 Makefile.PL
@@ -129,5 +131,6 @@ t/view_Function.t
 t/view_Man2HTML.t
 t/view_OpenThoughtTT.t
 t/view_Pod2HTML.t
+t/view_Pod2Pdf.t
 t/view_Pod2Source.t
 t/view_TT.t
