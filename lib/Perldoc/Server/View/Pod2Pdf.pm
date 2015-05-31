@@ -12,15 +12,18 @@ sub process {
   my ($self, $c) = @_;
 
   my $pdf;
-  my $cwd = getcwd;
   my $dir = tempdir(CLEANUP => 1);
+  # my $dir = 'tmp'; mkdir $dir;
+  my $cwd = getcwd;
   chdir $dir;
   open my $in_fh, "<", \$c->stash->{pod};
-  open my $out_fh, "|-", "lualatex";
+  open my $out_fh, ">", "texput.tex";
   my $parser = Pod::Lualatex->new();
   $parser->parse_from_filehandle($in_fh, $out_fh);
   close $in_fh;
   close $out_fh;
+  open STDIN, '<', '/dev/null';
+  system "lualatex", "texput.tex" for 1..2;
   eval { $pdf = slurp "texput.pdf" };
   die "can't convert into pdf; install tex-luatex\n" if $@;
   unlink glob "texput.*";
