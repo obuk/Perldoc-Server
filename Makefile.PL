@@ -30,8 +30,10 @@ requires 'Parse::CommandLine';
 requires 'Man2Html';		# xxx
 
 # convert to pdf
+requires 'Digest::MD5';
 requires 'File::Temp';
-requires 'Perl6::Slurp';
+requires 'File::Spec::Functions';
+requires 'File::Slurp';
 requires 'Pod::Lualatex';	# xxx
 
 # debug
