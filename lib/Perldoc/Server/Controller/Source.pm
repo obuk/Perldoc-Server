@@ -29,9 +29,20 @@ sub index :Path {
     my $title = join '::',@pod;
     $c->stash->{title}       = $title;
     $c->stash->{path}        = \@pod;
-    $c->stash->{pod}         = $c->model('Pod')->pod($title);
-    $c->stash->{filename}    = $c->model('Pod')->find($title);
     $c->stash->{source_view} = 1;
+
+    if ($title =~ /\([^\)]+\)$/) {
+      my $model = $c->model('Man');
+      $c->stash->{man}  = $model->man($title);
+      $c->stash->{lang} = $model->lang;
+      $c->stash->{filename} = $model->find($title); # xxxxx
+      return $c->forward('View::Man2Source');
+    } else {
+      my $model = $c->model('Pod');
+      $c->stash->{pod}  = $model->pod($title);
+      $c->stash->{lang} = $model->lang;
+      $c->stash->{filename} = $model->find($title); # xxxxx
+    }
 
     given ($title) {
         when (/^([A-Z])/) {

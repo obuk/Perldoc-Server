@@ -4,9 +4,11 @@
     <head>
         <title>[% title | html %]</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-        <meta http-equiv="Content-Language" content="[% c.config.lang or 'en-gb' %]">
+        <meta http-equiv="Content-Language" content="[%
+		lang or c.req.params.lang or c.config.default or 'en-gb' %]">
         <link href="/static/css/css-20100402.css" rel="stylesheet" rev="stylesheet" type="text/css" media="screen">
         <link href="/static/css/exploreperl.css" rel="stylesheet" rev="stylesheet" type="text/css">
+        <link href="/static/css/mandoc.css" rel="stylesheet" rev="stylesheet" type="text/css">
         <script src="/static/js/OpenThought.js"></script>
         <script src="/static/js/PerlSyntax.js"></script>
         <script language="JavaScript" type="text/javascript">
@@ -86,6 +88,13 @@
                   </div>
                   <div class="page_links" id="page_links_top">
                     <a href="#" onClick="toolbar.goToTop();return false;">Go to top</a>
+		    [% IF path %]
+		      [% IF c.req.params %]
+		    &bull; <a href="[% c.uri_for('/pdf', path.join('/'), c.req.params) %]">Download PDF</a>
+		      [% ELSE %]
+		    &bull; <a href="[% c.uri_for('/pdf', path.join('/')) %]">Download PDF</a>
+		      [% END %]
+		    [% END %]
                   </div>
                   <div class="page_links" id="page_links_bottom">
                     [% IF page_index %]
@@ -104,12 +113,20 @@
                 </div>
                 [% IF source_available %]
                     <div id="source_link">
+		        [% IF c.req.params %]
+                        <a href="[% c.uri_for('/source',path.join('/'), c.req.params) %]">View source</a>
+                        [% ELSE %]
                         <a href="[% c.uri_for('/source',path.join('/')) %]">View source</a>
+                        [% END %]
                     </div>
                 [% END %]
                 [% IF source_view %]
                     <div id="source_link">
+		        [% IF c.req.params %]
+                        <a href="[% c.uri_for('/view',path.join('/'), c.req.params) %]">View documentation</a>
+                        [% ELSE %]
                         <a href="[% c.uri_for('/view',path.join('/')) %]">View documentation</a>
+                        [% END %]
                     </div>
                 [% END %]
               </div>

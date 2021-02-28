@@ -8,6 +8,7 @@ all_from 'lib/Perldoc/Server.pm';
 requires 'Catalyst::Runtime' => '5.71001';
 requires 'Catalyst::Plugin::ConfigLoader';
 requires 'Catalyst::Plugin::Static::Simple';
+requires 'Catalyst::Plugin::StackTrace';
 requires 'Catalyst::Plugin::Session';
 requires 'Catalyst::Plugin::Session::State::Cookie';
 requires 'Catalyst::Plugin::Session::Store::File';
@@ -26,6 +27,8 @@ requires 'HTML::Entities';
 requires 'MRO::Compat';
 requires 'experimental';
 requires 'Parse::CommandLine';
+requires 'Perl6::Slurp';
+requires 'YAML::Syck';
 
 catalyst_par_core;
 catalyst_par_engine 'HTTP';

@@ -31,12 +31,21 @@ sub index :Path {
     my $page = join '::',@pod;
     $c->stash->{title}       = $page;
     $c->stash->{path}        = \@pod;
-    $c->stash->{pod}         = $c->model('Pod')->pod($page);
     $c->stash->{contentpage} = 1;
 
-    if (my $v = $c->model('Pod')->version($page)) {
-      $c->stash->{version} = version->parse($v)->stringify;
+    if ($page =~ /\([^\)]+\)$/) {
+      my $model = $c->model('Man');
+      $c->stash->{man}  = $model->man($page);
+      $c->stash->{lang} = $model->lang;
+      return $c->forward('View::Man2HTML');
+    } else {
+      my $model = $c->model('Pod');
+      $c->stash->{pod}  = $model->pod($page);
+      $c->stash->{lang} = $model->lang;
     }
+#    if (my $v = $c->model('Pod')->version($page)) {
+#      $c->stash->{version} = version->parse($v)->stringify;
+#    }
     
     # Count the page views in the user's session
     my $uri = join '/','/view',@pod;
@@ -57,9 +66,6 @@ sub index :Path {
                 { url => $c->uri_for('/index/modules',$1), name => $1 },
             ];
             $c->stash->{source_available} = 1;
-        }
-        when (/\([^\)]+\)$/) {
-          return $c->forward('View::Man2HTML');
         }
         default {
             $c->stash->{breadcrumbs} = [

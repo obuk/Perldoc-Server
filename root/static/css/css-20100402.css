@@ -21,7 +21,9 @@
 body {
 	background-color: #004065;
 	margin: 0;
-	font-family: "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
+	// font-family: "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
+	font-family: "Noto Sans CJK JP", sans-serif;
+	// font-size: 12pt;
 }
 
 div.clear {
@@ -38,8 +40,6 @@ p {
 	margin: 0;
 	padding-top: 5px;
 	padding-bottom: 5px;
-	line-height: 1.3;
-	/* letter-spacing: 0.05ex; */
 }
 
 /* @group Header */
@@ -126,8 +126,6 @@ div#search_form {
 div#search_form input {
 	border-style: none;
 	width: 115px;
-	background-color: transparent;
-	font-size: 12px;
 }
 
 /* @end */
@@ -171,8 +169,8 @@ div#footer {
 
 div#footer_content {
 	background-image: url(/static/images/footer_bg.png);
-	padding-right: 52px;
-	padding-left: 52px;
+	padding-right: 74px;
+	padding-left: 74px;
 }
 
 div#footer_strapline {
@@ -490,30 +488,49 @@ div#content_body {
 	background-image: url(/static/images/content_bg.png);
 }
 
-div#content_body h1 {
-	font: 1.9em "ITC Garamond", Garamond, Georgia, "Times New Roman", Times, serif;
-	color: #36497d;
-	background: url(/static/images/h2_bg.png) no-repeat -2px 29px;
+div#content_body h1, h2, h3 {
+	// font-family: "ITC Garamond", Garamond, Georgia, "Times New Roman", Times, serif;
+}
 
+div#content_body h1, h2 {
+	background-image: url(/static/images/h2_bg.png);
+	background-repeat: no-repeat;
+}
+
+div#content_body h1 {
+	font-size: 1.9em;
+	color: #36497d;
+	/* background-position: -2px 29px; */
+	background-position: -2px 31px;
 	padding-left: 0px;
-	padding-top: 6px;
-	padding-bottom: 8px;
+	/* padding-top: 6px;
+	padding-bottom: 8px; */
+	padding-top: 2px;
+	padding-bottom: 2px;
 	margin-top: 0px;
 	margin-bottom: 0;
 }
 
+div.title_container > h1 > span {
+	float: right;
+	color: #aaa;
+}
+
 div#content_body h2 {
-	font: 1.5em "ITC Garamond", Garamond, Georgia, "Times New Roman", Times, serif;
+	font-size: 1.5em;
 	color: #36497d;
-	padding-top: 12px;
+        /* padding-top: 12px; */
+	padding-top: 2px;
 	margin: 0;
-	background: url(/static/images/h2_bg.png) no-repeat -2px 30px;
-	padding-bottom: 4px;
+	/* background-position: -2px 30px; */
+	background-position: -2px 25px;
+	/* padding-bottom: 4px; */
+	padding-bottom: 2px;
 	padding-left: 0;
 }
 
 div#content_body h3 {
-	font: 1.3em "ITC Garamond", Garamond, Georgia, "Times New Roman", Times, serif;
+	font-size: 1.3em;
 	color: #36497d;
 	margin-top: 9px;
 	margin-bottom: 3px;	
@@ -628,6 +645,10 @@ a.l_k:hover { color: #225533; font-weight:bold;} /* keyword */
 
 a.l_w:link, a.l_w:visited, a.l_w:active { color: #000000; } /* keyword */
 a.l_w:hover { color: #225533; } /* keyword */
+
+code, pre {
+    font-family: "Noto Sans Mono", monospace;
+}
 
 code.inline {
   background: #eeeedd;
@@ -785,6 +806,10 @@ div.hud_content ul {
 	margin-top: 10px;
 }
 
+div.hud_content ul > li > ul {
+	margin-top: 3px;
+}
+
 div#content_body div.hud_content a:link {
 	color: #a6a6a6;
 }
@@ -888,15 +913,8 @@ div.form_buttons input {
 	font-size: 1.2em;
 }
 
+i {
+	margin-right: 0.125em;
+}
 /* @end */
 
-/* hanging indent */
-ul.nobullet {
-	list-style-type: none;
-	padding-left: 0em
-}
-
-li.hangingindent {
-	text-indent: -1em;
-	padding-left: 1em;
-}

@@ -933,11 +933,13 @@ var toolbar = {
     // Find the <a name> tag corresponding to this href
     // First strip off the hash (first character)
     anchor = target.hash.substr(1);
+    // fix to handle UTF-8 anchors
+    anchor = decodeURI(anchor);
     // Now loop all A tags until we find one with that name
     var allLinks = $(document.body).getElements('a');
     var destinationLink = null;
     allLinks.each ( function(link) {
-      if (link.name && (link.name == anchor)) {
+      if (link.name && (link.name == anchor) || link.id && (link.id == anchor)) {
         destinationLink = link;
       }
     });

@@ -12,6 +12,7 @@ use Pod::ParseLink;
 use Pod::POM 0.23;
 use Pod::POM::View::HTML;
 use Pod::POM::View::Text;
+use URI;
 
 use Storable qw(dclone);
 use Getopt::Long;
@@ -319,10 +320,30 @@ sub view_item {
 
 sub view_textblock {
   my ($self, $text) = @_;
-  if ($c->config->{lang} && $c->config->{lang} =~ /^ja/i) {
-    $text =~ s/([^\x21-\xFF])\s*\n([^\x21-\xFF])/$1$2/g;
+  if ($Pod::POM::View::HTML::HTML_PROTECT) {
+    return "$text\n";
   }
-  return $Pod::POM::View::HTML::HTML_PROTECT? "$text\n" : "<p>$text</p>\n";
+  if ($c->stash->{lang} && $c->stash->{lang} =~ /^ja/i) {
+    return $self->view_textblock_ja($text);
+  }
+  return "<p>$text</p>";
+}
+
+use HTML::Spacing::JA;
+use utf8;
+
+sub view_textblock_ja {
+  my ($self, $text) = @_;
+
+  my $html = HTML::Spacing::JA->new(
+    #verbose => 1,
+    #enspace => ' ',
+    #punct_spacing => -1,
+    #re_token => { J => qr/ Official髭男dism /x },
+    #output_tag => [ p => style => "text-align: justify" ],
+  );
+
+  $html->parse($text);
 }
 
 
@@ -345,6 +366,7 @@ sub view_verbatim {
 sub view_seq_code {
   my ($self,$text) = @_;
   
+  #$text =~ s/^\s+|\s+$//g if $text =~ /\S/; # xxxxx
   return qq{<code class="inline">$text</code>};
 }
 
@@ -364,17 +386,26 @@ sub view_seq_link {
   my ($text,$inferred,$page,$section,$type) = parselink($link);
   
   $inferred =~ s/"//sg if $inferred;
+  #$inferred =~ s/^\s+|\s+$//g if $inferred; # xxxxx
   $section  = decode_entities($section) if $section;
   $section  =~ s/^"(.*)"$/$1/ if $section;
   
   #warn "$link at $document_name\n" if ($link =~ /perlvar\//);
+  #no warnings 'uninitialized';
   #warn "Link type: $type, text: $text, inferred: $inferred, link page: $page, link section: $section\n";
   if ($type eq 'pod') {
     my $href;
+    my $opage;
+    my %opts;
+    if ($page) {
+      $opage = $page;
+      %opts = map +(split /=/), split /\&/, $page =~ s/\?(.*)//? $1 : '';
+    }
     if ($page && $section && $page eq 'perlfunc') {
       (my $function = $section) =~ s/(-?[a-z]+).*/$1/i;
       if ($c->model('PerlFunc')->exists($function)) {
-        $href = $c->uri_for('/functions',$function);
+        #$href = $c->uri_for('/functions',$function);
+        $href = $c->uri_for('/functions', $function, %opts? \%opts : ());
         #$href = '[~ path ~]'."functions/$function.html";
         return qq{<a href="$href">$section</a>};
       } else {
@@ -388,18 +419,27 @@ sub view_seq_link {
     if ($page) {
       if ($c->model('Pod')->find($page)) {
         my @path = split /::/,$page;
-        $href = $c->uri_for('/view',@path);
+        #$href = $c->uri_for('/view', @path);
+        $href = $c->uri_for('/view', @path, %opts? \%opts : ());
       } elsif ($c->model('PerlFunc')->exists($page)) {
-        $href = $c->uri_for('/functions',$page);
-        return qq{<a href="$href">$page</a>};      
+        $href = $c->uri_for('/functions', $page);
+        $href = $c->uri_for('/functions', $page, %opts? \%opts : ());
+        #$href = $c->uri_for('/functions', $page);
+        return qq{<a href="$href">$opage</a>};      
       } else {
-        $href = "http://search.cpan.org/perldoc/$page";
+        #$href = "http://search.cpan.org/perldoc/$page";
+        $href = "http://metacpan.org/pod/$page";
+        if (%opts) {
+          (my $uri = URI->new($href))->query_form(%opts);
+          $href = $uri->as_string;
+        }
       }        
     }
     if ($section && $document_name eq 'function' and (!$page or $page eq '')) {
       (my $function = $section) =~ s/(-?[a-z]+).*/$1/i;
       if ($c->model('PerlFunc')->exists($function)) {
-        $href = $c->uri_for('/functions',$page);
+        #$href = $c->uri_for('/functions',$page);
+        $href = $c->uri_for('/functions', $page, %opts ? \%opts: ());
         return qq{<a href="$href">$section</a>};
       } else {
         $section = escape($section);
@@ -415,7 +455,11 @@ sub view_seq_link {
     return Pod::POM::View::HTML::make_href($href, $inferred);
   } elsif ($type eq 'man') {
     #return qq{<i>$inferred</i>};
-    my $href = $c->uri_for("/view/$page");
+    my %opts = map +(split /=/), split /\&/, $page =~ s/\?(.*)//? $1 : '';
+    my $href = $c->uri_for("/view/$page", \%opts);
+    if ($section) {
+      $href .= '#'.escape($section);
+    }
     return qq{<a href="$href">$inferred</a>};
   } elsif ($type eq 'url') {
     return qq{<a href="$page">$inferred</a>};

@@ -84,11 +84,21 @@ sub category_functions {
 
 sub function_pod {
   state %function_pod;
-  return \%function_pod if %function_pod;
-  
-  my $self     = shift;
-  my $perlfunc = $self->{c}->model('Pod')->pod('perlfunc');
-  my $re       = $self->{c}->model('Pod')->search_perlfunc_re(),
+  state $function_pod_lang;
+  #return \%function_pod if %function_pod;
+
+  my $self = shift;
+  my $model = $self->{c}->model('Pod');
+  my $perlfunc = $model->pod('perlfunc');
+  my $lang = $model->lang();
+
+  if (%function_pod) {
+    return \%function_pod if $function_pod_lang && $function_pod_lang eq $lang;
+    %function_pod = ();
+  }
+  $function_pod_lang = $lang;
+
+  my $re = $model->search_perlfunc_re();
   my $re_default = 'Alphabetical Listing of Perl Functions';
   $re = "($re|$re_default)" if $re && $re ne $re_default;
   $re ||= $re_default;
@@ -102,7 +112,11 @@ sub function_pod {
   }
   my (@headers,$body,$inlist);
   my $state = 'header_search';
+  #my @stack;
   SEARCH: while (<PERLFUNC>) {
+    #push @stack, $1 if /^=begin\s+(\S+)/;
+    #pop @stack, next if @stack && /^=end\s+$stack[-1]/;
+    #next if @stack;
     if ($state eq 'header_search') {
       next SEARCH unless (/^=item\s+\S/);
       $state = 'header_capture';

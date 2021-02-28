@@ -1,6 +1,13 @@
-lang: ja
+# lang: ja
 # lang: it
 # lang: fr
+
+lang:
+  default: ja
+  hint:
+    ja: 名前|名称|書式|説明|作者|翻訳
+    it: NOME|SINOSSI|DESCRIZIONE|AUTORE|TRADUZIONE
+    fr: NOM|NAME/NOM|AUTEUR|TRADUCTION
 
 # using_frontend_proxy: 1
 
@@ -12,3 +19,24 @@ feature:
 #    original:
 #      magic: 0
 #      color: "#aaa"
+
+pod2pdf:
+  ja:
+    utf8: 1
+    add_preamble: pod2manja.tmac
+    search_path: [ '.', '/etc/groff' ]
+
+man2pdf:
+  default:
+    tee /tmp/man2pdf.default
+    | groff -Tpdf -mandoc -k
+  ja:
+    nkf -w | perl -lpe 'print ".ds section-name $1\n.lf $." if /^[.]Sh (名前|名称)/'
+    | tee /tmp/man2pdf.ja
+    | groff -Tpdf -mandoc -mja -k
+  fr:
+    perl -lpe 'print ".ds section-name $1\n.lf $." if /^[.]Sh (NOM|NAME\/NOM)/'
+    | groff -Tpdf -mandoc -mfr -k
+  x-postpro: gs -sDEVICE=pdfwrite -o - -
+  # Download PDF: inline or attachment
+  download: inline

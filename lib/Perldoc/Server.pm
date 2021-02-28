@@ -25,8 +25,10 @@ use Catalyst qw/
                 Session
                 Session::State::Cookie
                 Session::Store::File
-                Static::Simple/;
-our $VERSION = '0.10_09';
+                Static::Simple
+                StackTrace
+               /;
+our $VERSION = '0.10_12';
 
 # Configure the application.
 #
@@ -39,6 +41,9 @@ our $VERSION = '0.10_09';
 
 my $host = (split('\.',hostname))[0];
 
+use YAML::Syck;
+$YAML::Syck::ImplicitUnicode = 1; # xxxxx
+
 __PACKAGE__->config( name             => 'Perldoc::Server',
                      version          => $VERSION,
                      host             => $host, 
@@ -49,6 +54,9 @@ __PACKAGE__->config( name             => 'Perldoc::Server',
                      'View::Pod2HTML' => { INCLUDE_PATH => __PACKAGE__->path_to('root','templates')},
                      encoding         => 'utf-8',
                      lang             => 'en-gb',
+                     'Plugin::ConfigLoader' => {
+                       driver => { General => { -UTF8 => 1 }, },
+                     },
                     );
 
 # Set default view to TT

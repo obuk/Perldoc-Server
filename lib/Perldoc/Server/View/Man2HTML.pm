@@ -7,15 +7,17 @@ use warnings;
 use 5.010;
 use parent 'Catalyst::View::TT';
 
-use Perldoc::Server::Convert::Man2HTML;
+#use Perldoc::Server::Convert::Man2HTML;
+use Perldoc::Server::Convert::Mandoc;
 
 sub process {
   my ($self,$c) = @_;
 
-  my $m2h = Perldoc::Server::Convert::Man2HTML->new($c, $c->stash->{title});
+  my $m2h = Perldoc::Server::Convert::Mandoc->new($c, $c->stash->{title}, $c->stash->{man});
   $c->stash->{pod2html}        = $m2h->body;
   $c->stash->{page_index}      = $m2h->index;
   $c->stash->{page_template} //= 'pod2html.tt';
+  $c->stash->{source_available} = 1;
 
   $c->forward('View::TT');
 }
@@ -28,6 +30,10 @@ Perldoc::Server::View::Man2HTML - Catalyst View
 =head1 DESCRIPTION
 
 Catalyst View.
+
+=head1 SEE ALSO
+
+L<Perldoc::Server::Convert::Mandoc>
 
 =head1 AUTHOR
 
