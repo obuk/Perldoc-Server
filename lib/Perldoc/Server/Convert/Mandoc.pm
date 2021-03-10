@@ -81,27 +81,20 @@ sub mandoc_html {
     }
   }
 
+  for ($body->content_list) {
+    if (ref && $_->tag eq 'div' && $_->attr('class') eq 'manual-text') {
+      $self->{arrange_mandoc_html} = 0;
+      $self->arrange_mandoc_html($c, $_);
+    }
+  }
+
   # add TOC to the output of mandoc like the output of perldoc server
   # Pod::POM::View::HTML.
-  $self->mandoc_elem($c, $body);
   my $index = HTML::TreeBuilder->new;
   $index->parse($self->index);
   my ($index_body) = grep { ref && $_->tag eq 'body' } $index->content_list;
   $body->splice_content(0, 0, $index_body->content_list);
-  $html = join "\n", map $_->as_HTML, $body->content_list;
-
-  my $lang = $c->stash->{lang} // '';
-  if ($lang && uc($lang) eq 'JA') {
-    my $ja = HTML::Spacing::JA->new(
-      #verbose => 1,
-      #punct_spacing => -1,
-      output_tag => 'div',
-      #output_tag => [ div => style => "text-align: justify" ],
-    );
-    $html = $ja->parse($html);
-  }
-
-  $html;
+  join "\n", map $_->as_HTML, $body->content_list;
 }
 
 
@@ -110,18 +103,76 @@ if (0) { no warnings 'redefine';
 }
 
 
-sub mandoc_elem {
+sub arrange_mandoc_html {
   my ($self, $c, $parent) = @_;
 
-  return unless ref $parent;
-  return unless $parent->can('content_list');
+  my @chunk;
+  for ($parent->detach_content, undef) {
+    my $flush;
+    if (!defined) {
+      $flush = 1;
+    } elsif (ref && $_->tag eq 'pre') {
+      my @content = split /\n/, $_->as_text;
+      s/^\p{blank}+|\p{blank}+$//g for @content;
+      $_->detach_content();
+      $_->push_content(join "\n", grep /./, @content);
+      my %seen;
+      $_->attr('class', join ' ', grep !$seen{$_}++, $_->attr('class'), 'verbatim');
+      $flush = 1;
+    } elsif (ref) {
+      $self->{arrange_mandoc_html}++;
+      $self->arrange_mandoc_html($c, $_);
+      --$self->{arrange_mandoc_html};
+      if ($_->tag =~ /^h\d/) {
+        if ($_->attr('id')) {
+          my $link = HTML::Element->new('a', href => "#".$_->attr('id'));
+          $link->push_content($_->as_text);
+          if ($_->tag =~ /^h([12])\b/) {
+            push @{$self->{index} ||= []}, [ $1, $link->as_HTML ];
+          }
+        }
+        $flush = 1;
+      } elsif ($_->tag eq 'br') {
+        $flush = 1;
+        $_ = undef;
+      } elsif ($_->tag eq 'div') {
+        $flush = 1;
+        if ($_->as_text =~ /^\p{blank}*$/) {
+          $_->detach_content;
+          $_ = undef;
+        }
+      } elsif ($_->tag eq 'dl') {
+        $flush = 1;
+      } elsif ($_->tag eq 'dd') {
+        $self->mandoc_link($c, $_);
+        push @chunk, $self->mandoc_textblock($c, $_);
+      } else {
+        push @chunk, $_;
+      }
+    } else {
+      push @chunk, $_;
+    }
 
-  for my $f (grep $self->can($_), map "mandoc_$_",
-             qw/elem link hx dl dd pre div/) {
-    $self->$f($c, $_) for $parent->content_list;
+    if ($flush) {
+      if (grep ref || /\S/, @chunk) {
+        my $chunk = HTML::Element->new('p');
+        $chunk->push_content(@chunk);
+        if ($self->{arrange_mandoc_html} == 0) {
+          $self->mandoc_link($c, $chunk);
+          $parent->push_content($self->mandoc_textblock($c, $chunk));
+        } else {
+          $self->mandoc_link($c, $chunk);
+          $parent->push_content($chunk->detach_content);
+        }
+      }
+      @chunk = ();
+      if (defined) {
+        $parent->push_content($_);
+      }
+    }
   }
-
 }
+
 
 sub mandoc_link {
   my ($self, $c, $parent) = @_;
@@ -201,158 +252,20 @@ sub mandoc_link {
 }
 
 
-sub mandoc_hx {
-  my ($self, $c, $_) = @_;
-
-  return unless ref;
-  return unless $_->tag =~ /^h\d+\b/;
-
-  $self->mandoc_clear_prev($c, $_);
-
-  if ($_->attr('id')) {
-    my $link = HTML::Element->new('a', href => "#".$_->attr('id'));
-    $link->push_content($_->as_text);
-    if ($_->tag =~ /^h([12])\b/) {
-      push @{$self->{index} ||= []}, [ $1, $link->as_HTML ];
+sub mandoc_textblock {
+  my ($self, $c, $text) = @_;
+  my $lang = $c->stash->{lang} // '';
+  if ($lang && uc($lang) eq 'JA') {
+    my $ja = HTML::Spacing::JA->new(
+      output_tag => '.',
+      #verbose => 1,
+      #punct_spacing => -1,
+    );
+    if ($ja) {
+      $ja->arrange($text);
     }
   }
-
-  # put "<div class='Pp'></div>" if it looks like there are no
-  # blank lines after Hx.
-  # perldoc-server (Pod::POM::View::HTML) outputs <p>$text</p> in
-  # the similar case.
-
-  if (my $p = $_->parent->content->[$_->pindex + 1]) {
-    if (ref $p && $p->tag =~ /^(p|div|br|h\d)$/) {
-      ;
-    } else {
-      my $pp = HTML::Element->new('div', class => 'Pp');
-      $_->parent->splice_content($_->pindex + 1, 0, $pp);
-    }
-  }
-
-}
-
-
-sub mandoc_pre {
-  my ($self, $c, $_) = @_;
-
-  return unless ref;
-  return unless $_->tag eq 'pre';
-
-  my @content = split /\n/, $_->as_text;
-  s/^\p{blank}*|\p{blank}*$// for @content;
-  $_->detach_content();
-  $_->push_content(join "\n", grep /./, @content);
-  $self->my_attr($_, class => 'verbatim');
-
-  $self->mandoc_clear_prev($c, $_);
-  $self->mandoc_clear_next($c, $_);
-}
-
-sub mandoc_div {
-  my ($self, $c, $_) = @_;
-
-  return unless ref;
-  return unless $_->tag eq 'div';
-
-  if ($_->as_text =~ /^\p{blank}*$/) {
-    $_->delete_content;
-  }
-
-  $self->mandoc_clear_prev($c, $_);
-  $self->mandoc_clear_next($c, $_);
-
-}
-
-sub mandoc_clear_prev {
-  my ($self, $c, $_) = @_;
-
-  my $p = ref $_->parent && $_->pindex > 0 ? $_->parent->content->[$_->pindex - 1] : undef;
-  if (ref $p &&
-      ($p->tag eq 'div' && $p->as_text =~ /^\p{blank}*$/ ||
-       $p->tag eq 'p' && $p->as_text =~ /^\p{blank}*$/ ||
-       $p->tag eq 'br')
-    ) {
-    $self->mandoc_clear_prev($c, $p);
-    $_->parent->splice_content($_->pindex - 1, 1);
-  }
-}
-
-sub mandoc_clear_next {
-  my ($self, $c, $_) = @_;
-
-  my $p = ref $_->parent ? $_->parent->content->[$_->pindex + 1] : undef;
-  if (ref $p &&
-      ($p->tag eq 'div' && $p->as_text =~ /^\p{blank}*$/ ||
-       $p->tag eq 'p' && $p->as_text =~ /^\p{blank}*$/ ||
-       $p->tag eq 'br')
-    ) {
-    $self->mandoc_clear_next($c, $p);
-    $_->parent->splice_content($_->pindex + 1, 1);
-  }
-}
-
-
-sub mandoc_dl {
-  my ($self, $c, $_) = @_;
-
-  return unless ref;
-  return unless $_->tag eq 'dl';
-
-  my $p = $_->pindex > 0 ? $_->parent->content->[$_->pindex - 1] : undef;
-  if (ref $p && $p->tag && $p->tag eq 'dl') {
-    $self->my_attr($p, style => { 'margin-bottom' => 0 });
-    $self->my_attr($_, style => { 'margin-top' => 0 });
-  }
-}
-
-sub mandoc_dd {
-  my ($self, $c, $_) = @_;
-
-  return unless ref;
-  return unless $_->tag eq 'dd';
-
-  if ($_->as_text =~ /^\p{blank}*$/) {
-    my $p = $_->pindex > 0 ? $_->parent->content->[$_->pindex - 1] : undef;
-    if (defined $p && ref $p && $p->tag && $p->tag eq 'dt') {
-      $self->my_attr($p, style => { float => 'none' });
-    }
-    $_->delete;
-  } else {
-    # <dd> ... <div>&nbsp</div> </dd>
-    while (my $n = scalar(@{$_->content})) {
-      my $c = $_->content->[$n - 1];
-      my $text = ref $c ? $c->as_text : $c;
-      last unless $text =~ /^\p{blank}*$/;
-      $_->splice_content($n - 1, 1);
-    }
-  }
-}
-
-sub my_attr {
-  my ($self, $elem, %args) = @_;
-  while (my ($key, $value) = each %args) {
-    if (ref $value) {
-      my %x;
-      if (my $tmp = $elem->attr($key)) {
-        $x{$1} = $2 while $tmp =~ /([\w\-]+):\s*([^;]*);?/g;
-      }
-      my @delete;
-      while (my ($key, $value) = each %{$value}) {
-        if (defined $value) {
-          $x{$key} = $value;
-        } else {
-          push @delete, $key;
-        }
-      }
-      delete @x{@delete};
-      $value = join '; ', map "$_: $x{$_}", keys %x;
-      $elem->attr($key, $value || undef);
-    } else {
-      $elem->attr($key, $value);
-    }
-  }
+  $text;
 }
 
 sub body {
