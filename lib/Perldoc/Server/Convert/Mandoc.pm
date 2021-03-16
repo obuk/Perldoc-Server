@@ -27,7 +27,6 @@ sub convert {
   my $c = $self->{c};
 
   my $man_fh = File::Temp->new(UNLINK => 1, SUFFIX => '.man');
-  #my $lang = $self->{c}->req->params->{lang} || $self->{c}->config->{lang}{default} || $self->{c}->config->{lang};
   my $lang = $c->stash->{lang} // '';
   my $title = $document_name;
   warn "# man -u $title >$man_fh\n";

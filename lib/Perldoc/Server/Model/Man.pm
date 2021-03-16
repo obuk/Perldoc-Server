@@ -16,8 +16,7 @@ sub ACCEPT_CONTEXT {
 sub find {
   my ($self, @man) = @_;
   if (@man) {
-    my $c = $self->{c};
-    my $lang = $c->req->params->{lang} || $c->config->{lang}{default} || $c->config->{lang};
+    my $lang = $self->lang_default;
     my ($section, $topic);
     if (@man == 2) {
       ($section, $topic) = @man;
@@ -49,17 +48,13 @@ sub find {
 
 sub man {
   my ($self, @man) = @_;
-  my $c = $self->{c};
   if (my $file = $self->find(@man)) {
     my $cat = $file =~ /gz$/? 'zcat' : 'cat';
     my $man = slurp "-|:encoding(utf8)", $cat, $file;
-    #$self->{lang} = '';
     unless ($self->{lang}) {
       my $lang;
       my $cc = "[.']";
-      my $lang_hint = $c->config->{lang}{hint};
-      $lang_hint = undef unless ref($lang_hint) eq 'HASH';
-      if ($lang_hint) {
+      if (my $lang_hint = $self->lang_hint) {
       get_lang:
         while ($man =~ /^($cc\s*S[Hh])\s+(.*?)\s*$/gm) {
           my $word = $2;
@@ -80,6 +75,27 @@ sub man {
     return $man;
   }
   return qq[.SH "Cannot find manpage for @man"];
+}
+
+sub lang_hint {
+  my ($self) = @_;
+  if (my $c = $self->{c}) {
+    my $lang_hint = ref $c->config->{lang} && $c->config->{lang}{hint};
+    $lang_hint = undef unless ref($lang_hint) eq 'HASH';
+    return $lang_hint;
+  }
+  return undef;
+}
+
+sub lang_default {
+  my ($self) = @_;
+  if (my $c = $self->{c}) {
+    my $lang = $c->req->params->{lang} ||
+      ref $c->config->{lang} && $c->config->{lang}{default} ||
+      $c->config->{lang};
+    return $lang;
+  }
+  return undef;
 }
 
 sub lang {

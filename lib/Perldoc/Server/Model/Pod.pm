@@ -28,8 +28,7 @@ sub pod {
   if (my $file = $self->find($pod)) {
     my $pod = slurp $file;
     unless ($self->{lang}) {
-      my $lang_hint = $self->{c}->config->{lang}{hint};
-      $lang_hint = undef unless ref($lang_hint) eq 'HASH';
+      my $lang_hint = $self->lang_hint;
       open my $pod_fh, "<", \$pod;
     get_lang:
       while (<$pod_fh>) {
@@ -59,8 +58,7 @@ sub pod {
 sub search_path {
   my ($self) = @_;
   my @search_path = ();
-  my $c = $self->{c};
-  my $lang = $c->req->params->{lang} || $c->config->{lang}{default} || $c->config->{lang};
+  my $lang = $self->lang_default;
   if ($lang) {
     if (my $tr = $self->new_translator($lang)) {
       if ($tr->can('pod_dirs')) {
@@ -120,8 +118,7 @@ sub find {
   return () unless $pod;
 
   $self->{lang} = undef;
-  my $c = $self->{c};
-  my $lang = $c->req->params->{lang} || $c->config->{lang}{default} || $c->config->{lang};
+  my $lang = $self->lang_default;
   if ($lang) {
     for (grep $self->can($_), "${lang}_find") {
       my @found = $self->$_($pod);
@@ -135,6 +132,28 @@ sub find {
     return $filename;
   }
   return ();
+}
+
+sub lang_hint {
+  my ($self) = @_;
+  if (my $c = $self->{c}) {
+    my $lang_hint = ref $c->config->{lang} && $c->config->{lang}{hint};
+    $lang_hint = undef unless ref($lang_hint) eq 'HASH';
+    return $lang_hint;
+  }
+  return undef;
+}
+
+sub lang_default {
+  my ($self) = @_;
+  if (my $c = $self->{c}) {
+    my $lang =
+      $c->req->params->{lang} ||
+      ref $c->config->{lang} && $c->config->{lang}{default} ||
+      $c->config->{lang};
+    return $lang;
+  }
+  return undef;
 }
 
 sub lang {

@@ -52,7 +52,7 @@ if ($options{perl}) {
 }
 
 close $config_fh;
-$ENV{PERLDOC_SERVER_CONFIG} = $config_filename;
+$ENV{PERLDOC_SERVER_CONFIG} //= $config_filename;
 
 
 #--Start the server--------------------------------------------------------
